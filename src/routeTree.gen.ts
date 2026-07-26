@@ -15,6 +15,7 @@ import { Route as OrdersIndexRouteImport } from './routes/orders.index'
 import { Route as OrdersNewRouteImport } from './routes/orders.new'
 import { Route as OrdersIdRouteImport } from './routes/orders.$id'
 import { Route as CustomerTokenIndexRouteImport } from './routes/customer.$token.index'
+import { Route as CustomerTokenSuccessRouteImport } from './routes/customer.$token.success'
 
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
@@ -46,6 +47,11 @@ const CustomerTokenIndexRoute = CustomerTokenIndexRouteImport.update({
   path: '/customer/$token/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CustomerTokenSuccessRoute = CustomerTokenSuccessRouteImport.update({
+  id: '/customer/$token/success',
+  path: '/customer/$token/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/orders/$id': typeof OrdersIdRoute
   '/orders/new': typeof OrdersNewRoute
   '/orders/': typeof OrdersIndexRoute
+  '/customer/$token/success': typeof CustomerTokenSuccessRoute
   '/customer/$token/': typeof CustomerTokenIndexRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/orders/$id': typeof OrdersIdRoute
   '/orders/new': typeof OrdersNewRoute
   '/orders': typeof OrdersIndexRoute
+  '/customer/$token/success': typeof CustomerTokenSuccessRoute
   '/customer/$token': typeof CustomerTokenIndexRoute
 }
 export interface FileRoutesById {
@@ -70,6 +78,7 @@ export interface FileRoutesById {
   '/orders/$id': typeof OrdersIdRoute
   '/orders/new': typeof OrdersNewRoute
   '/orders/': typeof OrdersIndexRoute
+  '/customer/$token/success': typeof CustomerTokenSuccessRoute
   '/customer/$token/': typeof CustomerTokenIndexRoute
 }
 export interface FileRouteTypes {
@@ -80,6 +89,7 @@ export interface FileRouteTypes {
     | '/orders/$id'
     | '/orders/new'
     | '/orders/'
+    | '/customer/$token/success'
     | '/customer/$token/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -88,6 +98,7 @@ export interface FileRouteTypes {
     | '/orders/$id'
     | '/orders/new'
     | '/orders'
+    | '/customer/$token/success'
     | '/customer/$token'
   id:
     | '__root__'
@@ -96,6 +107,7 @@ export interface FileRouteTypes {
     | '/orders/$id'
     | '/orders/new'
     | '/orders/'
+    | '/customer/$token/success'
     | '/customer/$token/'
   fileRoutesById: FileRoutesById
 }
@@ -105,6 +117,7 @@ export interface RootRouteChildren {
   OrdersIdRoute: typeof OrdersIdRoute
   OrdersNewRoute: typeof OrdersNewRoute
   OrdersIndexRoute: typeof OrdersIndexRoute
+  CustomerTokenSuccessRoute: typeof CustomerTokenSuccessRoute
   CustomerTokenIndexRoute: typeof CustomerTokenIndexRoute
 }
 
@@ -152,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomerTokenIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/customer/$token/success': {
+      id: '/customer/$token/success'
+      path: '/customer/$token/success'
+      fullPath: '/customer/$token/success'
+      preLoaderRoute: typeof CustomerTokenSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -161,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersIdRoute: OrdersIdRoute,
   OrdersNewRoute: OrdersNewRoute,
   OrdersIndexRoute: OrdersIndexRoute,
+  CustomerTokenSuccessRoute: CustomerTokenSuccessRoute,
   CustomerTokenIndexRoute: CustomerTokenIndexRoute,
 }
 export const routeTree = rootRouteImport
