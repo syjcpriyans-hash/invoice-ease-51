@@ -9,38 +9,167 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as InvoicesRouteImport } from './routes/invoices'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OrdersIndexRouteImport } from './routes/orders.index'
+import { Route as OrdersNewRouteImport } from './routes/orders.new'
+import { Route as OrdersIdRouteImport } from './routes/orders.$id'
+import { Route as CustomerTokenIndexRouteImport } from './routes/customer.$token.index'
+import { Route as CustomerTokenSuccessRouteImport } from './routes/customer.$token.success'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvoicesRoute = InvoicesRouteImport.update({
+  id: '/invoices',
+  path: '/invoices',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrdersIndexRoute = OrdersIndexRouteImport.update({
+  id: '/orders/',
+  path: '/orders/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrdersNewRoute = OrdersNewRouteImport.update({
+  id: '/orders/new',
+  path: '/orders/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrdersIdRoute = OrdersIdRouteImport.update({
+  id: '/orders/$id',
+  path: '/orders/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerTokenIndexRoute = CustomerTokenIndexRouteImport.update({
+  id: '/customer/$token/',
+  path: '/customer/$token/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomerTokenSuccessRoute = CustomerTokenSuccessRouteImport.update({
+  id: '/customer/$token/success',
+  path: '/customer/$token/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/invoices': typeof InvoicesRoute
+  '/settings': typeof SettingsRoute
+  '/orders/$id': typeof OrdersIdRoute
+  '/orders/new': typeof OrdersNewRoute
+  '/orders/': typeof OrdersIndexRoute
+  '/customer/$token/success': typeof CustomerTokenSuccessRoute
+  '/customer/$token/': typeof CustomerTokenIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/invoices': typeof InvoicesRoute
+  '/settings': typeof SettingsRoute
+  '/orders/$id': typeof OrdersIdRoute
+  '/orders/new': typeof OrdersNewRoute
+  '/orders': typeof OrdersIndexRoute
+  '/customer/$token/success': typeof CustomerTokenSuccessRoute
+  '/customer/$token': typeof CustomerTokenIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/dashboard': typeof DashboardRoute
+  '/invoices': typeof InvoicesRoute
+  '/settings': typeof SettingsRoute
+  '/orders/$id': typeof OrdersIdRoute
+  '/orders/new': typeof OrdersNewRoute
+  '/orders/': typeof OrdersIndexRoute
+  '/customer/$token/success': typeof CustomerTokenSuccessRoute
+  '/customer/$token/': typeof CustomerTokenIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/invoices'
+    | '/settings'
+    | '/orders/$id'
+    | '/orders/new'
+    | '/orders/'
+    | '/customer/$token/success'
+    | '/customer/$token/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/invoices'
+    | '/settings'
+    | '/orders/$id'
+    | '/orders/new'
+    | '/orders'
+    | '/customer/$token/success'
+    | '/customer/$token'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/invoices'
+    | '/settings'
+    | '/orders/$id'
+    | '/orders/new'
+    | '/orders/'
+    | '/customer/$token/success'
+    | '/customer/$token/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DashboardRoute: typeof DashboardRoute
+  InvoicesRoute: typeof InvoicesRoute
+  SettingsRoute: typeof SettingsRoute
+  OrdersIdRoute: typeof OrdersIdRoute
+  OrdersNewRoute: typeof OrdersNewRoute
+  OrdersIndexRoute: typeof OrdersIndexRoute
+  CustomerTokenSuccessRoute: typeof CustomerTokenSuccessRoute
+  CustomerTokenIndexRoute: typeof CustomerTokenIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invoices': {
+      id: '/invoices'
+      path: '/invoices'
+      fullPath: '/invoices'
+      preLoaderRoute: typeof InvoicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +177,55 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/orders/': {
+      id: '/orders/'
+      path: '/orders'
+      fullPath: '/orders/'
+      preLoaderRoute: typeof OrdersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/orders/new': {
+      id: '/orders/new'
+      path: '/orders/new'
+      fullPath: '/orders/new'
+      preLoaderRoute: typeof OrdersNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/orders/$id': {
+      id: '/orders/$id'
+      path: '/orders/$id'
+      fullPath: '/orders/$id'
+      preLoaderRoute: typeof OrdersIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/$token/': {
+      id: '/customer/$token/'
+      path: '/customer/$token'
+      fullPath: '/customer/$token/'
+      preLoaderRoute: typeof CustomerTokenIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customer/$token/success': {
+      id: '/customer/$token/success'
+      path: '/customer/$token/success'
+      fullPath: '/customer/$token/success'
+      preLoaderRoute: typeof CustomerTokenSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DashboardRoute: DashboardRoute,
+  InvoicesRoute: InvoicesRoute,
+  SettingsRoute: SettingsRoute,
+  OrdersIdRoute: OrdersIdRoute,
+  OrdersNewRoute: OrdersNewRoute,
+  OrdersIndexRoute: OrdersIndexRoute,
+  CustomerTokenSuccessRoute: CustomerTokenSuccessRoute,
+  CustomerTokenIndexRoute: CustomerTokenIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
