@@ -1,21 +1,19 @@
 import type { CustomerInformation, Order, OrderStatus } from "@/types";
-import { readJson, writeJson, STORAGE_KEYS } from "./storage";
-import { SEED_ORDERS } from "./seedData";
-import { generateId, generateToken, orderTotals, suggestOrderNumber } from "@/lib/format";
+import { supabase } from "@/lib/supabase";
+import { calculateTotals } from "@/lib/format";
+import { mapOrder } from "./mappers";
 
-function ensureSeeded(): Order[] {
-  const seeded = readJson<boolean>(STORAGE_KEYS.seeded, false);
-  const existing = readJson<Order[] | null>(STORAGE_KEYS.orders, null);
-  if (!seeded || existing === null) {
-    writeJson(STORAGE_KEYS.orders, SEED_ORDERS);
-    writeJson(STORAGE_KEYS.seeded, true);
-    return SEED_ORDERS;
-  }
-  return existing;
-}
+const ORDER_SELECT = `
+  *,
+  order_items(*),
+  customer_information(*),
+  order_timeline(*)
+`;
 
-function persist(orders: Order[]): void {
-  writeJson(STORAGE_KEYS.orders, orders);
+async function currentUserId(): Promise<string> {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error("Please sign in to continue.");
+  return data.user.id;
 }
 
 export interface CreateOrderInput {
@@ -32,93 +30,136 @@ export interface CreateOrderInput {
 }
 
 export const orderService = {
-  list(): Order[] {
-    return [...ensureSeeded()].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
+  async list(): Promise<Order[]> {
+    const { data, error } = await supabase
+      .from("orders")
+      .select(ORDER_SELECT)
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(mapOrder);
   },
 
-  getById(id: string): Order | undefined {
-    return ensureSeeded().find((o) => o.id === id);
+  async getById(id: string): Promise<Order | undefined> {
+    const { data, error } = await supabase
+      .from("orders")
+      .select(ORDER_SELECT)
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? mapOrder(data) : undefined;
   },
 
-  getByToken(token: string): Order | undefined {
-    return ensureSeeded().find((o) => o.token === token);
-  },
-
-  suggestOrderNumber(): string {
-    return suggestOrderNumber(ensureSeeded().length);
-  },
-
-  create(input: CreateOrderInput): Order {
-    const now = new Date().toISOString();
-    const order: Order = {
-      id: generateId("ord"),
-      ...input,
-      status: "link_sent",
-      token: generateToken(40),
-      createdAt: now,
-      updatedAt: now,
-      timeline: [
-        { status: "draft", at: now },
-        { status: "link_sent", at: now, note: "Customer information link generated." },
-      ],
-    };
-    persist([order, ...ensureSeeded()]);
-    return order;
-  },
-
-  updateStatus(id: string, status: OrderStatus, note?: string): Order | undefined {
-    const orders = ensureSeeded();
-    let updated: Order | undefined;
-    const next = orders.map((o) => {
-      if (o.id !== id) return o;
-      const at = new Date().toISOString();
-      updated = {
-        ...o,
-        status,
-        updatedAt: at,
-        timeline: [...o.timeline, { status, at, note }],
-      };
-      return updated;
-    });
-    persist(next);
-    return updated;
-  },
-
-  markFormOpened(token: string): Order | undefined {
-    const order = orderService.getByToken(token);
-    if (!order) return undefined;
-    if (order.status !== "link_sent") return order;
-    return orderService.updateStatus(order.id, "form_opened", "Customer opened the form.");
-  },
-
-  submitCustomerInformation(
-    token: string,
-    info: CustomerInformation,
-  ): { ok: boolean; order?: Order; error?: string } {
-    const orders = ensureSeeded();
-    const order = orders.find((o) => o.token === token);
-    if (!order) return { ok: false, error: "Order not found." };
-    if (order.customerInformation) {
-      return { ok: false, error: "This order has already been submitted.", order };
+  async getByToken(token: string): Promise<Order | undefined> {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(token)) {
+      return undefined;
     }
-    const at = new Date().toISOString();
-    const updated: Order = {
-      ...order,
-      customerInformation: info,
-      status: "submitted",
-      updatedAt: at,
-      timeline: [
-        ...order.timeline,
-        { status: "submitted", at, note: "Customer submitted billing information." },
-      ],
-    };
-    persist(orders.map((o) => (o.id === order.id ? updated : o)));
-    return { ok: true, order: updated };
+    const { data, error } = await supabase.rpc("get_public_order", { p_token: token });
+    if (error) throw error;
+    return data ? mapOrder(data) : undefined;
   },
 
-  totals(order: Order) {
-    return orderTotals(order);
+  async suggestOrderNumber(): Promise<string> {
+    const year = new Date().getFullYear();
+    const { count, error } = await supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true });
+    if (error) throw error;
+    return `ORD-${year}-${String((count ?? 0) + 1).padStart(4, "0")}`;
+  },
+
+  async create(input: CreateOrderInput): Promise<Order> {
+    const ownerId = await currentUserId();
+    const totals = calculateTotals(input);
+
+    const { data: orderRow, error: orderError } = await supabase
+      .from("orders")
+      .insert({
+        owner_id: ownerId,
+        order_number: input.orderNumber.trim(),
+        customer_email: input.customerEmail.trim().toLowerCase(),
+        currency: input.currency,
+        due_in_days: input.dueInDays,
+        internal_notes: input.internalNotes?.trim() ?? "",
+        discount_type: input.discountType,
+        discount_value: input.discountValue,
+        tax_rate: input.taxRate,
+        shipping: input.shipping,
+        subtotal: totals.subtotal,
+        discount_amount: totals.discount,
+        tax_amount: totals.tax,
+        total: totals.total,
+        status: "link_sent",
+      })
+      .select("*")
+      .single();
+
+    if (orderError) throw orderError;
+
+    const itemRows = input.items.map((item, position) => ({
+      order_id: orderRow.id,
+      description: item.description.trim(),
+      sku: item.sku?.trim() ?? "",
+      quantity: item.quantity,
+      unit_price: item.unitPrice,
+      taxable: item.taxable,
+      line_total: Number((item.quantity * item.unitPrice).toFixed(2)),
+      position,
+    }));
+
+    const { error: itemsError } = await supabase.from("order_items").insert(itemRows);
+    if (itemsError) {
+      await supabase.from("orders").delete().eq("id", orderRow.id);
+      throw itemsError;
+    }
+
+    const { error: timelineError } = await supabase.from("order_timeline").insert([
+      { order_id: orderRow.id, status: "draft", note: "Order created." },
+      {
+        order_id: orderRow.id,
+        status: "link_sent",
+        note: "Customer information link generated.",
+      },
+    ]);
+    if (timelineError) throw timelineError;
+
+    const created = await orderService.getById(orderRow.id);
+    if (!created) throw new Error("The order was created but could not be loaded.");
+    return created;
+  },
+
+  async updateStatus(id: string, status: OrderStatus, note?: string): Promise<Order | undefined> {
+    const { error } = await supabase.from("orders").update({ status }).eq("id", id);
+    if (error) throw error;
+
+    const { error: timelineError } = await supabase.from("order_timeline").insert({
+      order_id: id,
+      status,
+      note: note ?? "",
+    });
+    if (timelineError) throw timelineError;
+    return orderService.getById(id);
+  },
+
+  async markFormOpened(token: string): Promise<void> {
+    const { error } = await supabase.rpc("mark_public_order_opened", { p_token: token });
+    if (error) throw error;
+  },
+
+  async submitCustomerInformation(token: string, info: CustomerInformation): Promise<void> {
+    const { error } = await supabase.rpc("submit_public_customer_information", {
+      p_token: token,
+      p_full_name: info.fullName,
+      p_email: info.email,
+      p_phone: info.phone,
+      p_legal_business_name: info.legalBusinessName,
+      p_operating_name: info.operatingName ?? "",
+      p_po_number: info.poNumber ?? "",
+      p_billing_address: info.billingAddress,
+      p_shipping_address: info.shippingAddress,
+      p_shipping_same_as_billing: info.shippingSameAsBilling,
+      p_confirmed_accurate: info.confirmedAccurate,
+      p_confirmed_authorized: info.confirmedAuthorized,
+    });
+    if (error) throw error;
   },
 };

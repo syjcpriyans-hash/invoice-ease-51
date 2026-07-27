@@ -13,6 +13,7 @@ import { orderService } from "@/services/orderService";
 import { customerUrl, formatDateTime, orderTotals, ORDER_STATUS_LABELS } from "@/lib/format";
 import type { Order } from "@/types";
 import { toast } from "sonner";
+import { RequireAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/orders/$id")({
   head: () => ({
@@ -26,7 +27,11 @@ export const Route = createFileRoute("/orders/$id")({
       },
     ],
   }),
-  component: OrderDetailsPage,
+  component: () => (
+    <RequireAuth>
+      <OrderDetailsPage />
+    </RequireAuth>
+  ),
 });
 
 function Field({ label, value }: { label: string; value: string }) {
@@ -43,7 +48,19 @@ function OrderDetailsPage() {
   const [order, setOrder] = useState<Order | null | undefined>(undefined);
 
   useEffect(() => {
-    setOrder(orderService.getById(id) ?? null);
+    let active = true;
+    orderService
+      .getById(id)
+      .then((data) => {
+        if (active) setOrder(data ?? null);
+      })
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : "Could not load the order");
+        if (active) setOrder(null);
+      });
+    return () => {
+      active = false;
+    };
   }, [id]);
 
   if (order === undefined) {
@@ -59,7 +76,7 @@ function OrderDetailsPage() {
       <AppShell>
         <ErrorState
           title="Order not found"
-          description="This order may have been removed from local storage."
+          description="This order could not be found in the database."
           action={
             <Button asChild variant="outline" size="sm">
               <Link to="/orders">Back to orders</Link>
@@ -74,12 +91,16 @@ function OrderDetailsPage() {
   const link = customerUrl(order.token);
   const info = order.customerInformation;
 
-  function markDraft() {
+  async function markDraft() {
     if (!order) return;
-    const updated = orderService.updateStatus(order.id, "draft", "Manually reset to draft.");
-    if (updated) {
-      setOrder(updated);
-      toast.success("Order marked as draft");
+    try {
+      const updated = await orderService.updateStatus(order.id, "draft", "Manually reset to draft.");
+      if (updated) {
+        setOrder(updated);
+        toast.success("Order marked as draft");
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update the order");
     }
   }
 

@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { invoiceService } from "@/services/invoiceService";
 import { formatCurrency, formatDate } from "@/lib/format";
 import type { Invoice } from "@/types";
+import { RequireAuth } from "@/lib/auth";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/invoices")({
   head: () => ({
@@ -21,14 +23,30 @@ export const Route = createFileRoute("/invoices")({
       },
     ],
   }),
-  component: InvoicesPage,
+  component: () => (
+    <RequireAuth>
+      <InvoicesPage />
+    </RequireAuth>
+  ),
 });
 
 function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[] | null>(null);
 
   useEffect(() => {
-    setInvoices(invoiceService.list());
+    let active = true;
+    invoiceService
+      .list()
+      .then((data) => {
+        if (active) setInvoices(data);
+      })
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : "Could not load invoices");
+        if (active) setInvoices([]);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   return (
@@ -36,7 +54,7 @@ function InvoicesPage() {
       <div className="space-y-6">
         <PageHeader
           title="Invoices"
-          description="PDF generation and email delivery run on the backend and are not enabled in this preview."
+          description="Invoices will appear here after the automatic generation step is enabled."
         />
 
         {invoices === null ? (

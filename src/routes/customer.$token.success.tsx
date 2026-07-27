@@ -6,7 +6,6 @@ import { OrderSummary } from "@/components/order-summary";
 import { ErrorState, LoadingState } from "@/components/states";
 import { CustomerHeader } from "./customer.$token.index";
 import { orderService } from "@/services/orderService";
-import { settingsService } from "@/services/settingsService";
 import { orderTotals } from "@/lib/format";
 import type { Order } from "@/types";
 
@@ -15,11 +14,6 @@ export const Route = createFileRoute("/customer/$token/success")({
     meta: [
       { title: "Information submitted — InvoiceFlow" },
       { name: "description", content: "Your billing information was submitted and your invoice is being prepared." },
-      { property: "og:title", content: "Information submitted — InvoiceFlow" },
-      {
-        property: "og:description",
-        content: "Your billing information was submitted and your invoice is being prepared.",
-      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -29,11 +23,20 @@ export const Route = createFileRoute("/customer/$token/success")({
 function CustomerSuccessPage() {
   const { token } = Route.useParams();
   const [order, setOrder] = useState<Order | null | undefined>(undefined);
-  const [sellerName, setSellerName] = useState("Seller");
 
   useEffect(() => {
-    setOrder(orderService.getByToken(token) ?? null);
-    setSellerName(settingsService.get().displayName);
+    let active = true;
+    orderService
+      .getByToken(token)
+      .then((data) => {
+        if (active) setOrder(data ?? null);
+      })
+      .catch(() => {
+        if (active) setOrder(null);
+      });
+    return () => {
+      active = false;
+    };
   }, [token]);
 
   if (order === undefined) {
@@ -56,7 +59,7 @@ function CustomerSuccessPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <CustomerHeader sellerName={sellerName} />
+      <CustomerHeader sellerName={order.sellerName ?? "Seller"} />
       <main className="mx-auto w-full max-w-3xl space-y-6 px-4 py-10 sm:px-6">
         <section className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card p-8 text-center shadow-xs">
           <CheckCircle2 className="h-10 w-10 text-success" aria-hidden="true" />
@@ -76,8 +79,7 @@ function CustomerSuccessPage() {
             </div>
           </dl>
           <p className="max-w-md text-sm text-muted-foreground">
-            Your invoice is being generated and will be emailed to you automatically. No further action
-            is needed.
+            Your billing details have been recorded. Automatic PDF generation and email delivery will be enabled in the next build step.
           </p>
         </section>
 

@@ -11,6 +11,8 @@ import { invoiceService } from "@/services/invoiceService";
 import { formatCurrency, formatDate, orderTotals } from "@/lib/format";
 import { APP_CONFIG } from "@/config/app";
 import type { Invoice, Order } from "@/types";
+import { RequireAuth } from "@/lib/auth";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -20,25 +22,16 @@ export const Route = createFileRoute("/dashboard")({
         name: "description",
         content: "Track orders awaiting customer information, submitted forms and generated invoices.",
       },
-      { property: "og:title", content: "Dashboard — InvoiceFlow" },
-      {
-        property: "og:description",
-        content: "Track orders awaiting customer information, submitted forms and generated invoices.",
-      },
     ],
   }),
-  component: DashboardPage,
+  component: () => (
+    <RequireAuth>
+      <DashboardPage />
+    </RequireAuth>
+  ),
 });
 
-function StatCard({
-  label,
-  value,
-  icon: Icon,
-}: {
-  label: string;
-  value: number;
-  icon: typeof Send;
-}) {
+function StatCard({ label, value, icon: Icon }: { label: string; value: number; icon: typeof Send }) {
   return (
     <div className="rounded-lg border border-border bg-card p-5 shadow-xs">
       <div className="flex items-center justify-between">
@@ -55,8 +48,21 @@ function DashboardPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
 
   useEffect(() => {
-    setOrders(orderService.list());
-    setInvoices(invoiceService.list());
+    let active = true;
+    Promise.all([orderService.list(), invoiceService.list()])
+      .then(([nextOrders, nextInvoices]) => {
+        if (!active) return;
+        setOrders(nextOrders);
+        setInvoices(nextInvoices);
+      })
+      .catch((error) => {
+        if (!active) return;
+        toast.error(error instanceof Error ? error.message : "Could not load dashboard data");
+        setOrders([]);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const awaiting = orders?.filter((o) => ["draft", "link_sent", "form_opened"].includes(o.status)).length ?? 0;
@@ -120,15 +126,11 @@ function DashboardPage() {
                       <td className="px-4 py-3 text-right tabular-nums text-foreground">
                         {formatCurrency(orderTotals(order).total, order.currency)}
                       </td>
-                      <td className="px-4 py-3">
-                        <StatusBadge status={order.status} />
-                      </td>
+                      <td className="px-4 py-3"><StatusBadge status={order.status} /></td>
                       <td className="px-4 py-3 text-muted-foreground">{formatDate(order.createdAt)}</td>
                       <td className="px-4 py-3 text-right">
                         <Button asChild variant="outline" size="sm">
-                          <Link to="/orders/$id" params={{ id: order.id }}>
-                            View
-                          </Link>
+                          <Link to="/orders/$id" params={{ id: order.id }}>View</Link>
                         </Button>
                       </td>
                     </tr>

@@ -13,6 +13,8 @@ import { orderService } from "@/services/orderService";
 import { customerUrl, formatCurrency, formatDate, orderTotals } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Order, OrderStatus } from "@/types";
+import { RequireAuth } from "@/lib/auth";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/orders/")({
   head: () => ({
@@ -26,7 +28,11 @@ export const Route = createFileRoute("/orders/")({
       },
     ],
   }),
-  component: OrdersPage,
+  component: () => (
+    <RequireAuth>
+      <OrdersPage />
+    </RequireAuth>
+  ),
 });
 
 const FILTERS = [
@@ -42,7 +48,7 @@ type FilterKey = (typeof FILTERS)[number]["key"];
 const GROUPS: Record<Exclude<FilterKey, "all">, OrderStatus[]> = {
   awaiting: ["draft", "link_sent", "form_opened"],
   submitted: ["submitted"],
-  completed: ["invoice_generated", "email_sent", "delivered"],
+  completed: ["invoice_generating", "invoice_generated", "email_queued", "email_sent", "delivered"],
   failed: ["failed"],
 };
 
@@ -52,7 +58,19 @@ function OrdersPage() {
   const [filter, setFilter] = useState<FilterKey>("all");
 
   useEffect(() => {
-    setOrders(orderService.list());
+    let active = true;
+    orderService
+      .list()
+      .then((data) => {
+        if (active) setOrders(data);
+      })
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : "Could not load orders");
+        if (active) setOrders([]);
+      });
+    return () => {
+      active = false;
+    };
   }, []);
 
   const visible = useMemo(() => {

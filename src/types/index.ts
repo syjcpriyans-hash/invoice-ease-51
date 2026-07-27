@@ -3,7 +3,9 @@ export type OrderStatus =
   | "link_sent"
   | "form_opened"
   | "submitted"
+  | "invoice_generating"
   | "invoice_generated"
+  | "email_queued"
   | "email_sent"
   | "delivered"
   | "failed";
@@ -91,6 +93,8 @@ export interface Order {
   updatedAt: string;
   timeline: OrderStatusEvent[];
   customerInformation?: CustomerInformation;
+  sellerName?: string;
+  sellerPrimaryColor?: string;
 }
 
 export interface Invoice {
@@ -104,6 +108,7 @@ export interface Invoice {
   currency: string;
   invoiceDate: string;
   emailStatus: EmailStatus;
+  pdfPath?: string;
 }
 
 export interface BusinessSettings {

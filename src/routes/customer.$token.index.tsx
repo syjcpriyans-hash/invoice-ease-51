@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { customerInformationSchema, type CustomerFormValues } from "@/lib/schemas";
 import { orderService } from "@/services/orderService";
-import { settingsService } from "@/services/settingsService";
 import { orderTotals } from "@/lib/format";
 import { APP_CONFIG } from "@/config/app";
 import type { Address, Order } from "@/types";
@@ -73,7 +72,8 @@ function CustomerFormPage() {
   const { token } = Route.useParams();
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | null | undefined>(undefined);
-  const sellerName = typeof window === "undefined" ? "" : settingsService.get().displayName;
+  const [submitting, setSubmitting] = useState(false);
+  const sellerName = order?.sellerName ?? "Seller";
 
   const form = useForm<CustomerFormValues>({
     resolver: zodResolver(customerInformationSchema),
@@ -93,14 +93,26 @@ function CustomerFormPage() {
   });
 
   useEffect(() => {
-    const found = orderService.getByToken(token);
-    if (!found) {
-      setOrder(null);
-      return;
-    }
-    const opened = orderService.markFormOpened(token) ?? found;
-    setOrder(opened);
-    form.setValue("email", opened.customerEmail);
+    let active = true;
+    orderService
+      .getByToken(token)
+      .then(async (found) => {
+        if (!active) return;
+        if (!found) {
+          setOrder(null);
+          return;
+        }
+        setOrder(found);
+        form.setValue("email", found.customerEmail);
+        await orderService.markFormOpened(token);
+      })
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : "Could not load this order");
+        if (active) setOrder(null);
+      });
+    return () => {
+      active = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
@@ -128,32 +140,34 @@ function CustomerFormPage() {
   const sameAsBilling = form.watch("shippingSameAsBilling");
   const errors = form.formState.errors;
 
-  function onSubmit(values: CustomerFormValues) {
+  async function onSubmit(values: CustomerFormValues) {
     const billing = values.billingAddress as Address;
     const shipping = values.shippingSameAsBilling
       ? billing
       : ({ ...emptyAddress, ...values.shippingAddress } as Address);
 
-    const result = orderService.submitCustomerInformation(token, {
-      fullName: values.fullName,
-      email: values.email,
-      phone: values.phone,
-      legalBusinessName: values.legalBusinessName,
-      operatingName: values.operatingName,
-      poNumber: values.poNumber,
-      billingAddress: billing,
-      shippingAddress: shipping,
-      shippingSameAsBilling: values.shippingSameAsBilling,
-      confirmedAccurate: true,
-      confirmedAuthorized: true,
-      submittedAt: new Date().toISOString(),
-    });
-
-    if (!result.ok) {
-      toast.error(result.error ?? "Submission failed");
-      return;
+    setSubmitting(true);
+    try {
+      await orderService.submitCustomerInformation(token, {
+        fullName: values.fullName,
+        email: values.email,
+        phone: values.phone,
+        legalBusinessName: values.legalBusinessName,
+        operatingName: values.operatingName,
+        poNumber: values.poNumber,
+        billingAddress: billing,
+        shippingAddress: shipping,
+        shippingSameAsBilling: values.shippingSameAsBilling,
+        confirmedAccurate: true,
+        confirmedAuthorized: true,
+        submittedAt: new Date().toISOString(),
+      });
+      navigate({ to: "/customer/$token/success", params: { token } });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Submission failed");
+    } finally {
+      setSubmitting(false);
     }
-    navigate({ to: "/customer/$token/success", params: { token } });
   }
 
   return (
@@ -310,8 +324,8 @@ function CustomerFormPage() {
             </fieldset>
 
             <div className="flex justify-end">
-              <Button type="submit" size="lg">
-                Confirm Information and Generate Invoice
+              <Button type="submit" size="lg" disabled={submitting}>
+                {submitting ? "Submitting…" : "Confirm Information and Generate Invoice"}
               </Button>
             </div>
           </form>

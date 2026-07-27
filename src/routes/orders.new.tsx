@@ -33,6 +33,7 @@ import { settingsService } from "@/services/settingsService";
 import { APP_CONFIG, CURRENCIES } from "@/config/app";
 import type { Order, OrderItem } from "@/types";
 import { toast } from "sonner";
+import { RequireAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/orders/new")({
   head: () => ({
@@ -49,7 +50,11 @@ export const Route = createFileRoute("/orders/new")({
       },
     ],
   }),
-  component: CreateOrderPage,
+  component: () => (
+    <RequireAuth>
+      <CreateOrderPage />
+    </RequireAuth>
+  ),
 });
 
 function CreateOrderPage() {
@@ -57,6 +62,7 @@ function CreateOrderPage() {
   const [items, setItems] = useState<OrderItem[]>([createEmptyItem()]);
   const [itemsError, setItemsError] = useState<string | undefined>();
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<CreateOrderValues>({
     resolver: zodResolver(createOrderSchema),
@@ -74,14 +80,24 @@ function CreateOrderPage() {
   });
 
   useEffect(() => {
-    const settings = settingsService.get();
-    form.reset({
-      ...form.getValues(),
-      orderNumber: orderService.suggestOrderNumber(),
-      currency: settings.defaultCurrency,
-      taxRate: settings.defaultTaxRate,
-      dueInDays: settings.defaultPaymentTerms || 30,
-    });
+    let active = true;
+    Promise.all([settingsService.get(), orderService.suggestOrderNumber()])
+      .then(([settings, orderNumber]) => {
+        if (!active) return;
+        form.reset({
+          ...form.getValues(),
+          orderNumber,
+          currency: settings.defaultCurrency,
+          taxRate: settings.defaultTaxRate,
+          dueInDays: settings.defaultPaymentTerms || 30,
+        });
+      })
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : "Could not load order defaults");
+      });
+    return () => {
+      active = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -129,22 +145,29 @@ function CreateOrderPage() {
     return true;
   }
 
-  function onSubmit(values: CreateOrderValues) {
+  async function onSubmit(values: CreateOrderValues) {
     if (!validateItems(values)) return;
-    const order = orderService.create({
-      orderNumber: values.orderNumber,
-      customerEmail: values.customerEmail,
-      currency: values.currency,
-      dueInDays: values.dueInDays,
-      internalNotes: values.internalNotes,
-      items,
-      discountType: values.discountType,
-      discountValue: values.discountValue,
-      taxRate: values.taxRate,
-      shipping: values.shipping,
-    });
-    setCreatedOrder(order);
-    toast.success("Customer link created");
+    setSubmitting(true);
+    try {
+      const order = await orderService.create({
+        orderNumber: values.orderNumber,
+        customerEmail: values.customerEmail,
+        currency: values.currency,
+        dueInDays: values.dueInDays,
+        internalNotes: values.internalNotes,
+        items,
+        discountType: values.discountType,
+        discountValue: values.discountValue,
+        taxRate: values.taxRate,
+        shipping: values.shipping,
+      });
+      setCreatedOrder(order);
+      toast.success("Customer link created");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not create the order");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const errors = form.formState.errors;
@@ -157,8 +180,8 @@ function CreateOrderPage() {
           title="Create order"
           description="Line items, pricing and tax are locked once the customer link is generated."
           actions={
-            <Button type="submit" size="sm">
-              Create Customer Link
+            <Button type="submit" size="sm" disabled={submitting}>
+              {submitting ? "Creating…" : "Create Customer Link"}
             </Button>
           }
         />
@@ -298,7 +321,9 @@ function CreateOrderPage() {
           <Button asChild type="button" variant="outline">
             <Link to="/orders">Cancel</Link>
           </Button>
-          <Button type="submit">Create Customer Link</Button>
+          <Button type="submit" disabled={submitting}>
+            {submitting ? "Creating…" : "Create Customer Link"}
+          </Button>
         </div>
       </form>
 

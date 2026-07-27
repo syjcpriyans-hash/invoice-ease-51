@@ -12,6 +12,8 @@ import { businessSettingsSchema, type BusinessSettingsValues } from "@/lib/schem
 import { settingsService } from "@/services/settingsService";
 import { formatInvoiceNumber } from "@/lib/format";
 import { toast } from "sonner";
+import { RequireAuth } from "@/lib/auth";
+import { DEFAULT_SETTINGS } from "@/services/seedData";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -25,7 +27,11 @@ export const Route = createFileRoute("/settings")({
       },
     ],
   }),
-  component: SettingsPage,
+  component: () => (
+    <RequireAuth>
+      <SettingsPage />
+    </RequireAuth>
+  ),
 });
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -40,11 +46,22 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function SettingsPage() {
   const form = useForm<BusinessSettingsValues>({
     resolver: zodResolver(businessSettingsSchema),
-    defaultValues: settingsService.get(),
+    defaultValues: DEFAULT_SETTINGS,
   });
 
   useEffect(() => {
-    form.reset(settingsService.get());
+    let active = true;
+    settingsService
+      .get()
+      .then((settings) => {
+        if (active) form.reset(settings);
+      })
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : "Could not load settings");
+      });
+    return () => {
+      active = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -78,9 +95,13 @@ function SettingsPage() {
     );
   }
 
-  function onSubmit(data: BusinessSettingsValues) {
-    settingsService.save({ ...settingsService.get(), ...data });
-    toast.success("Settings saved");
+  async function onSubmit(data: BusinessSettingsValues) {
+    try {
+      await settingsService.save(data);
+      toast.success("Settings saved");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save settings");
+    }
   }
 
   return (

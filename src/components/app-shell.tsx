@@ -1,10 +1,12 @@
 import { useState, type ReactNode } from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
-import { FilePlus2, FileText, LayoutDashboard, Menu, Receipt, Settings } from "lucide-react";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { FilePlus2, FileText, LayoutDashboard, LogOut, Menu, Receipt, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { APP_CONFIG } from "@/config/app";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useAuth } from "@/lib/auth";
+import { toast } from "sonner";
 
 const NAV_ITEMS = [
   { label: "Dashboard", to: "/dashboard", icon: LayoutDashboard },
@@ -61,6 +63,17 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleSignOut() {
+    try {
+      await signOut();
+      navigate({ to: "/login", replace: true });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not sign out");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -69,9 +82,15 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mt-7 flex-1">
           <NavLinks />
         </div>
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          Demo environment. Data is stored locally in this browser.
-        </p>
+        <div className="space-y-2 border-t border-sidebar-border pt-4">
+          <p className="truncate text-xs text-muted-foreground" title={user?.email}>
+            {user?.email}
+          </p>
+          <Button variant="outline" size="sm" className="w-full justify-start" onClick={handleSignOut}>
+            <LogOut className="h-4 w-4" />
+            Sign out
+          </Button>
+        </div>
       </aside>
 
       <div className="lg:pl-60">
@@ -87,6 +106,12 @@ export function AppShell({ children }: { children: ReactNode }) {
               <BrandMark />
               <div className="mt-7">
                 <NavLinks onNavigate={() => setOpen(false)} />
+              </div>
+              <div className="mt-6 border-t border-sidebar-border pt-4">
+                <Button variant="outline" size="sm" className="w-full justify-start" onClick={handleSignOut}>
+                  <LogOut className="h-4 w-4" />
+                  Sign out
+                </Button>
               </div>
             </SheetContent>
           </Sheet>
