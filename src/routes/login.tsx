@@ -1,20 +1,20 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { FileText } from "lucide-react";
-import { useAuth } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { APP_CONFIG } from "@/config/app";
-import { toast } from "sonner";
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/lib/auth';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { APP_CONFIG } from '@/config/app';
+import { SiteLogo } from '@/components/site-logo';
+import { toast } from 'sonner';
 
-export const Route = createFileRoute("/login")({
+export const Route = createFileRoute('/login')({
   head: () => ({
     meta: [
       { title: `Sign in — ${APP_CONFIG.name}` },
-      { name: "robots", content: "noindex" },
+      { name: 'robots', content: 'noindex' },
     ],
   }),
   component: LoginPage,
@@ -23,12 +23,12 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const { user, loading, signIn, signUp } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: "/dashboard", replace: true });
+    if (!loading && user) navigate({ to: '/dashboard', replace: true });
   }, [loading, navigate, user]);
 
   async function handleSignIn(event: React.FormEvent) {
@@ -36,9 +36,9 @@ function LoginPage() {
     setSubmitting(true);
     try {
       await signIn(email, password);
-      navigate({ to: "/dashboard", replace: true });
+      navigate({ to: '/dashboard', replace: true });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Sign-in failed");
+      toast.error(error instanceof Error ? error.message : 'Sign-in failed');
     } finally {
       setSubmitting(false);
     }
@@ -47,20 +47,20 @@ function LoginPage() {
   async function handleSignUp(event: React.FormEvent) {
     event.preventDefault();
     if (password.length < 8) {
-      toast.error("Use a password with at least 8 characters.");
+      toast.error('Use a password with at least 8 characters.');
       return;
     }
     setSubmitting(true);
     try {
       const result = await signUp(email, password);
       if (result.needsEmailConfirmation) {
-        toast.success("Account created. Check your email to confirm it, then sign in.");
+        toast.success('Account created. Check your email to confirm it, then sign in.');
       } else {
-        toast.success("Account created");
-        navigate({ to: "/settings", replace: true });
+        toast.success('Account created');
+        navigate({ to: '/settings', replace: true });
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Sign-up failed");
+      toast.error(error instanceof Error ? error.message : 'Sign-up failed');
     } finally {
       setSubmitting(false);
     }
@@ -96,18 +96,15 @@ function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-10">
       <div className="w-full max-w-md space-y-5">
-        <div className="flex items-center justify-center gap-2.5">
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <FileText className="h-5 w-5" />
-          </span>
-          <span className="text-xl font-semibold tracking-tight">{APP_CONFIG.name}</span>
+        <div className="flex items-center justify-center">
+          <SiteLogo imageClassName="h-12" />
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Business account</CardTitle>
             <CardDescription>
-              Sign in to create secure customer links and manage invoice orders.
+              Sign in to access the private dashboard and manage invoice workflows.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -120,7 +117,7 @@ function LoginPage() {
                 <form className="mt-4 space-y-5" onSubmit={handleSignIn}>
                   {fields}
                   <Button className="w-full" disabled={submitting}>
-                    {submitting ? "Signing in…" : "Sign in"}
+                    {submitting ? 'Signing in…' : 'Sign in'}
                   </Button>
                 </form>
               </TabsContent>
@@ -129,7 +126,7 @@ function LoginPage() {
                   {fields}
                   <p className="text-xs text-muted-foreground">Use at least 8 characters.</p>
                   <Button className="w-full" disabled={submitting}>
-                    {submitting ? "Creating account…" : "Create account"}
+                    {submitting ? 'Creating account…' : 'Create account'}
                   </Button>
                 </form>
               </TabsContent>

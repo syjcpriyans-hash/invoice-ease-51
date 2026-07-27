@@ -1,9 +1,10 @@
 export const APP_CONFIG = {
-  name: "InvoiceFlow",
+  name: 'Invoice Ease',
   description:
-    "Automated order-to-invoice workflow: lock an order, collect billing details, generate the invoice.",
-  defaultCurrency: "USD",
+    'Turn confirmed orders into invoice-ready workflows with one customer link.',
+  defaultCurrency: 'USD',
   defaultTaxRate: 8.25,
+  waitlistCta: 'Join the waitlist',
 } as const;
 
-export const CURRENCIES = ["USD", "CAD", "EUR", "GBP"] as const;
+export const CURRENCIES = ['USD', 'CAD', 'EUR', 'GBP'] as const;
