@@ -1,0 +1,282 @@
+/* ========================================================================== 
+   DESIGN SYSTEM — visual layer only
+   No components, application logic, routes, APIs, authentication, database,
+   email automation, or invoice-processing code are changed by this file.
+
+   Tailwind compatibility note:
+   Base styles are placed in cascade layers so component-specific Tailwind
+   utilities can continue to override them where required.
+   ========================================================================== */
+
+/* -------------------------------------------------------------------------
+   1. DESIGN TOKENS
+   ------------------------------------------------------------------------- */
+@layer base {
+  :root {
+    /* Color */
+    --color-bg: #ffffff;
+    --color-surface: #f7f8fa;
+    --color-border: #e4e7ec;
+    --color-text: #101828;
+    --color-text-secondary: #667085;
+    --color-primary: #4f46e5;
+    --color-primary-hover: #4338ca;
+    --color-success: #12b76a;
+    --color-success-bg: #ecfdf3;
+    --color-danger: #f04438;
+    --color-danger-bg: #fef3f2;
+    --color-warning: #f79009;
+    --color-warning-bg: #fffaeb;
+
+    /* Type */
+    --font-ui: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-data: "JetBrains Mono", "IBM Plex Mono", ui-monospace, monospace;
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.5rem;
+    --font-size-2xl: 2rem;
+    --font-size-3xl: 2.75rem;
+
+    /* Spacing (4px base scale) */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-5: 24px;
+    --space-6: 32px;
+    --space-8: 48px;
+    --space-10: 64px;
+
+    /* Shape */
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+    --shadow-md: 0 4px 8px rgba(16, 24, 40, 0.08);
+  }
+
+  /* -----------------------------------------------------------------------
+     2. BASE ELEMENTS
+     ----------------------------------------------------------------------- */
+  body {
+    background: var(--color-bg);
+    color: var(--color-text);
+    font-family: var(--font-ui);
+    font-size: var(--font-size-base);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-ui);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--color-text);
+    line-height: 1.2;
+  }
+
+  h1 { font-size: var(--font-size-3xl); }
+  h2 { font-size: var(--font-size-2xl); }
+  h3 { font-size: var(--font-size-xl); }
+  h4 { font-size: var(--font-size-lg); }
+
+  p { color: var(--color-text); }
+
+  small,
+  .text-secondary {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+  }
+
+  a {
+    color: var(--color-primary);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+  }
+
+  /* -----------------------------------------------------------------------
+     3. BUTTONS
+     ----------------------------------------------------------------------- */
+  button {
+    font-family: var(--font-ui);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  button:hover { background: var(--color-surface); }
+
+  button[type="submit"] {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+  }
+
+  button[type="submit"]:hover {
+    background: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+  }
+
+  /* -----------------------------------------------------------------------
+     4. FORMS / INPUTS
+     ----------------------------------------------------------------------- */
+  input,
+  select,
+  textarea {
+    font-family: var(--font-ui);
+    font-size: var(--font-size-sm);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+    color: var(--color-text);
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+    border-color: var(--color-primary);
+  }
+
+  label {
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    color: var(--color-text);
+    margin-bottom: var(--space-1);
+    display: inline-block;
+  }
+
+  /* -----------------------------------------------------------------------
+     5. TABLES — dashboard + invoice line items
+     ----------------------------------------------------------------------- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-size-sm);
+  }
+
+  th {
+    text-align: left;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    border-bottom: 1px solid var(--color-border);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+  }
+
+  tr:hover td { background: var(--color-surface); }
+
+  /* -----------------------------------------------------------------------
+     8. ACCESSIBILITY
+     ----------------------------------------------------------------------- */
+  :focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* Precise, financial numerals. */
+  .data,
+  .amount,
+  td.numeric {
+    font-family: var(--font-data);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .btn {
+    font-family: var(--font-ui);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background: var(--color-bg);
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+  }
+
+  .btn:hover { background: var(--color-surface); }
+
+  .btn-primary {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #ffffff;
+  }
+
+  .btn-primary:hover {
+    background: var(--color-primary-hover);
+    border-color: var(--color-primary-hover);
+  }
+
+  /* -----------------------------------------------------------------------
+     6. CARDS / SURFACES
+     ----------------------------------------------------------------------- */
+  .card {
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: var(--space-5);
+  }
+
+  /* -----------------------------------------------------------------------
+     7. STATUS BADGES
+     ----------------------------------------------------------------------- */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--font-size-xs);
+    font-weight: 500;
+    padding: var(--space-1) var(--space-3);
+    border-radius: 999px;
+  }
+
+  .badge-success {
+    background: var(--color-success-bg);
+    color: var(--color-success);
+  }
+
+  .badge-danger {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+  }
+
+  .badge-warning {
+    background: var(--color-warning-bg);
+    color: var(--color-warning);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
