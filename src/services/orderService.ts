@@ -145,21 +145,27 @@ export const orderService = {
     if (error) throw error;
   },
 
-  async submitCustomerInformation(token: string, info: CustomerInformation): Promise<void> {
-    const { error } = await supabase.rpc("submit_public_customer_information", {
-      p_token: token,
-      p_full_name: info.fullName,
-      p_email: info.email,
-      p_phone: info.phone,
-      p_legal_business_name: info.legalBusinessName,
-      p_operating_name: info.operatingName ?? "",
-      p_po_number: info.poNumber ?? "",
-      p_billing_address: info.billingAddress,
-      p_shipping_address: info.shippingAddress,
-      p_shipping_same_as_billing: info.shippingSameAsBilling,
-      p_confirmed_accurate: info.confirmedAccurate,
-      p_confirmed_authorized: info.confirmedAuthorized,
+  async submitCustomerInformation(
+    token: string,
+    info: CustomerInformation,
+  ): Promise<{ invoiceNumber?: string; emailStatus?: "sent" | "failed"; automationError?: string | null }> {
+    const response = await fetch("/api/customer-submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, information: info }),
     });
-    if (error) throw error;
+
+    const payload = (await response.json().catch(() => ({}))) as {
+      error?: string;
+      invoiceNumber?: string;
+      emailStatus?: "sent" | "failed";
+      automationError?: string | null;
+    };
+
+    if (!response.ok) {
+      throw new Error(payload.error || "Could not submit customer information.");
+    }
+
+    return payload;
   },
 };

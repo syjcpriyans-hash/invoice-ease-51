@@ -159,7 +159,7 @@ function CustomerFormPage() {
 
     setSubmitting(true);
     try {
-      await orderService.submitCustomerInformation(token, {
+      const result = await orderService.submitCustomerInformation(token, {
         fullName: values.fullName,
         email: values.email,
         phone: values.phone,
@@ -173,6 +173,7 @@ function CustomerFormPage() {
         confirmedAuthorized: true,
         submittedAt: new Date().toISOString(),
       });
+      window.sessionStorage.setItem(`invoice-ease-submission-${token}`, JSON.stringify(result));
       navigate({ to: "/customer/$token/success", params: { token } });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Submission failed");

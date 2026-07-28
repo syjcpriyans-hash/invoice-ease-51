@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { LockedOrderItems } from "@/components/locked-order-items";
 import { OrderSummary } from "@/components/order-summary";
 import { ErrorState, LoadingState } from "@/components/states";
@@ -23,8 +23,22 @@ export const Route = createFileRoute("/customer/$token/success")({
 function CustomerSuccessPage() {
   const { token } = Route.useParams();
   const [order, setOrder] = useState<Order | null | undefined>(undefined);
+  const [automation, setAutomation] = useState<{
+    invoiceNumber?: string;
+    emailStatus?: "sent" | "failed";
+    automationError?: string | null;
+  } | null>(null);
 
   useEffect(() => {
+    const saved = window.sessionStorage.getItem(`invoice-ease-submission-${token}`);
+    if (saved) {
+      try {
+        setAutomation(JSON.parse(saved));
+      } catch {
+        setAutomation(null);
+      }
+    }
+
     let active = true;
     orderService
       .getByToken(token)
@@ -62,7 +76,11 @@ function CustomerSuccessPage() {
       <CustomerHeader sellerName={order.sellerName ?? "Seller"} />
       <main className="mx-auto w-full max-w-3xl space-y-6 px-4 py-10 sm:px-6">
         <section className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card p-8 text-center shadow-xs">
-          <CheckCircle2 className="h-10 w-10 text-success" aria-hidden="true" />
+          {automation?.emailStatus === "failed" ? (
+            <AlertTriangle className="h-10 w-10 text-warning" aria-hidden="true" />
+          ) : (
+            <CheckCircle2 className="h-10 w-10 text-success" aria-hidden="true" />
+          )}
           <h1 className="text-xl font-semibold tracking-tight text-foreground">
             Your information has been submitted
           </h1>
@@ -79,7 +97,11 @@ function CustomerSuccessPage() {
             </div>
           </dl>
           <p className="max-w-md text-sm text-muted-foreground">
-            Your billing details have been recorded. Automatic PDF generation and email delivery will be enabled in the next build step.
+            {automation?.emailStatus === "sent"
+              ? `Invoice ${automation.invoiceNumber ?? ""} has been generated and emailed to you.`
+              : automation?.emailStatus === "failed"
+                ? "Your billing details were recorded and the invoice was generated, but email delivery needs attention from the seller."
+                : "Your billing details have been recorded and the invoice is being processed."}
           </p>
         </section>
 

@@ -10,6 +10,7 @@ import { OrderSummary } from "@/components/order-summary";
 import { ErrorState, LoadingState } from "@/components/states";
 import { Button } from "@/components/ui/button";
 import { orderService } from "@/services/orderService";
+import { invoiceService } from "@/services/invoiceService";
 import { customerUrl, formatDateTime, orderTotals, ORDER_STATUS_LABELS } from "@/lib/format";
 import type { Order } from "@/types";
 import { toast } from "sonner";
@@ -46,6 +47,7 @@ function Field({ label, value }: { label: string; value: string }) {
 function OrderDetailsPage() {
   const { id } = Route.useParams();
   const [order, setOrder] = useState<Order | null | undefined>(undefined);
+  const [processingInvoice, setProcessingInvoice] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -91,6 +93,25 @@ function OrderDetailsPage() {
   const link = customerUrl(order.token);
   const info = order.customerInformation;
 
+  async function processInvoice() {
+    if (!order) return;
+    setProcessingInvoice(true);
+    try {
+      const result = await invoiceService.processOrder(order.id);
+      const updated = await orderService.getById(order.id);
+      if (updated) setOrder(updated);
+      if (result.emailStatus === "sent") {
+        toast.success(`Invoice ${result.invoiceNumber} generated and emailed.`);
+      } else {
+        toast.error(result.error || `Invoice ${result.invoiceNumber} was generated, but email delivery failed.`);
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not process invoice");
+    } finally {
+      setProcessingInvoice(false);
+    }
+  }
+
   async function markDraft() {
     if (!order) return;
     try {
@@ -119,6 +140,11 @@ function OrderDetailsPage() {
                   Open Customer Form
                 </Link>
               </Button>
+              {info ? (
+                <Button size="sm" onClick={processInvoice} disabled={processingInvoice}>
+                  {processingInvoice ? "Processing…" : order.status === "failed" ? "Retry Invoice" : "Generate Invoice"}
+                </Button>
+              ) : null}
               <Button variant="secondary" size="sm" onClick={markDraft}>
                 Mark as Draft
               </Button>

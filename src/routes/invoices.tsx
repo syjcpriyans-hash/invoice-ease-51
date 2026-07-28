@@ -49,6 +49,14 @@ function InvoicesPage() {
     };
   }, []);
 
+  async function downloadInvoice(invoice: Invoice) {
+    try {
+      await invoiceService.downloadPdf(invoice);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not download invoice PDF");
+    }
+  }
+
   return (
     <AppShell>
       <div className="space-y-6">
@@ -96,7 +104,13 @@ function InvoicesPage() {
                             View
                           </Link>
                         </Button>
-                        <Button variant="ghost" size="sm" disabled title="Available once the backend is connected">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={!invoice.pdfPath}
+                          title={invoice.pdfPath ? "Download invoice PDF" : "PDF is not available yet"}
+                          onClick={() => downloadInvoice(invoice)}
+                        >
                           Download PDF
                         </Button>
                         <Button variant="ghost" size="sm" disabled title="Available once the backend is connected">
