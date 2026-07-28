@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useMemo, useState } from 'react';
 import {
   ArrowRight,
@@ -90,14 +90,9 @@ function LandingPage() {
       <header className="border-b border-border/70 bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
           <SiteLogo imageClassName="h-10 md:h-11" />
-          <div className="flex items-center gap-3">
-            <Button asChild variant="ghost" className="hidden sm:inline-flex">
-              <a href="#waitlist">Join waitlist</a>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link to="/login">Team login</Link>
-            </Button>
-          </div>
+          <Button asChild size="sm">
+            <a href="#waitlist">Join waitlist</a>
+          </Button>
         </div>
       </header>
 
@@ -350,10 +345,7 @@ function LandingPage() {
             <SiteLogo imageClassName="h-8" />
             <span>© {new Date().getFullYear()} {APP_CONFIG.name}. All rights reserved.</span>
           </div>
-          <div className="flex items-center gap-4">
-            <a href="#waitlist" className="hover:text-foreground">Join waitlist</a>
-            <Link to="/login" className="hover:text-foreground">Team login</Link>
-          </div>
+          <a href="#waitlist" className="hover:text-foreground">Join waitlist</a>
         </div>
       </footer>
     </div>
