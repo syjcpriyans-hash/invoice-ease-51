@@ -78,6 +78,13 @@ export function mapOrder(row: any): Order {
     taxRate: numberValue(row.taxRate ?? row.tax_rate),
     shipping: numberValue(row.shipping),
     status: row.status,
+    customerLinkEmailStatus: row.customerLinkEmailStatus ?? row.customer_link_email_status ?? "not_sent",
+    customerLinkEmailProviderId:
+      String(row.customerLinkEmailProviderId ?? row.customer_link_email_provider_id ?? "") || undefined,
+    customerLinkEmailSentAt:
+      String(row.customerLinkEmailSentAt ?? row.customer_link_email_sent_at ?? "") || undefined,
+    customerLinkEmailLastError:
+      String(row.customerLinkEmailLastError ?? row.customer_link_email_last_error ?? "") || undefined,
     token: String(row.token ?? row.public_token ?? ""),
     createdAt: String(row.createdAt ?? row.created_at ?? new Date().toISOString()),
     updatedAt: String(row.updatedAt ?? row.updated_at ?? new Date().toISOString()),

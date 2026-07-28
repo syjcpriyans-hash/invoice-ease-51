@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Mail } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
@@ -48,6 +48,7 @@ function OrderDetailsPage() {
   const { id } = Route.useParams();
   const [order, setOrder] = useState<Order | null | undefined>(undefined);
   const [processingInvoice, setProcessingInvoice] = useState(false);
+  const [sendingCustomerLink, setSendingCustomerLink] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -93,6 +94,24 @@ function OrderDetailsPage() {
   const link = customerUrl(order.token);
   const info = order.customerInformation;
 
+  async function sendCustomerLink() {
+    if (!order) return;
+    setSendingCustomerLink(true);
+    try {
+      const result = await orderService.sendCustomerLink(order.id);
+      if (result.order) setOrder(result.order);
+      if (result.emailStatus === "sent") {
+        toast.success(`Customer link emailed to ${order.customerEmail}.`);
+      } else {
+        toast.error(result.error || "Customer-link email failed. The fallback link is still available.");
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not send the customer link");
+    } finally {
+      setSendingCustomerLink(false);
+    }
+  }
+
   async function processInvoice() {
     if (!order) return;
     setProcessingInvoice(true);
@@ -133,6 +152,22 @@ function OrderDetailsPage() {
           description={order.customerEmail}
           actions={
             <>
+              {!info ? (
+                <Button
+                  size="sm"
+                  onClick={sendCustomerLink}
+                  disabled={sendingCustomerLink || order.customerLinkEmailStatus === "sent"}
+                >
+                  <Mail className="h-4 w-4" aria-hidden="true" />
+                  {sendingCustomerLink
+                    ? "Sending…"
+                    : order.customerLinkEmailStatus === "sent"
+                      ? "Link Emailed"
+                      : order.customerLinkEmailStatus === "failed"
+                        ? "Retry Link Email"
+                        : "Email Customer Link"}
+                </Button>
+              ) : null}
               <CopyLinkButton value={link} />
               <Button asChild variant="outline" size="sm">
                 <Link to="/customer/$token" params={{ token: order.token }} target="_blank">
@@ -212,11 +247,46 @@ function OrderDetailsPage() {
             <OrderSummary totals={totals} currency={order.currency} taxRate={order.taxRate} />
 
             <section className="space-y-3 rounded-lg border border-border bg-card p-5 shadow-xs">
-              <h2 className="text-sm font-semibold text-foreground">Customer link</h2>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold text-foreground">Customer link</h2>
+                <span
+                  className={
+                    order.customerLinkEmailStatus === "sent"
+                      ? "text-xs font-medium text-success"
+                      : order.customerLinkEmailStatus === "failed"
+                        ? "text-xs font-medium text-destructive"
+                        : "text-xs font-medium text-muted-foreground"
+                  }
+                >
+                  {order.customerLinkEmailStatus === "sent"
+                    ? "Email sent"
+                    : order.customerLinkEmailStatus === "failed"
+                      ? "Email failed"
+                      : order.customerLinkEmailStatus === "queued"
+                        ? "Email queued"
+                        : "Not emailed"}
+                </span>
+              </div>
+              {order.customerLinkEmailSentAt ? (
+                <p className="text-xs text-muted-foreground">
+                  Sent {formatDateTime(order.customerLinkEmailSentAt)} to {order.customerEmail}
+                </p>
+              ) : null}
+              {order.customerLinkEmailLastError ? (
+                <p className="rounded-md border border-destructive/25 bg-destructive/5 px-3 py-2 text-xs text-destructive">
+                  {order.customerLinkEmailLastError}
+                </p>
+              ) : null}
               <p className="break-all rounded-md border border-border bg-muted/50 px-3 py-2 text-xs text-foreground">
                 {link}
               </p>
               <div className="flex flex-wrap gap-2">
+                {!info && order.customerLinkEmailStatus !== "sent" ? (
+                  <Button size="sm" onClick={sendCustomerLink} disabled={sendingCustomerLink}>
+                    <Mail className="h-4 w-4" aria-hidden="true" />
+                    {sendingCustomerLink ? "Sending…" : "Send Customer Link"}
+                  </Button>
+                ) : null}
                 <CopyLinkButton value={link} label="Copy Customer Link" />
                 <Button asChild variant="outline" size="sm">
                   <Link to="/customer/$token" params={{ token: order.token }} target="_blank">

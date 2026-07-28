@@ -88,7 +88,7 @@ export const orderService = {
         discount_amount: totals.discount,
         tax_amount: totals.tax,
         total: totals.total,
-        status: "link_sent",
+        status: "link_created",
       })
       .select("*")
       .single();
@@ -116,7 +116,7 @@ export const orderService = {
       { order_id: orderRow.id, status: "draft", note: "Order created." },
       {
         order_id: orderRow.id,
-        status: "link_sent",
+        status: "link_created",
         note: "Customer information link generated.",
       },
     ]);
@@ -125,6 +125,39 @@ export const orderService = {
     const created = await orderService.getById(orderRow.id);
     if (!created) throw new Error("The order was created but could not be loaded.");
     return created;
+  },
+
+  async sendCustomerLink(id: string): Promise<{
+    order: Order | undefined;
+    emailStatus: "sent" | "failed";
+    error?: string;
+  }> {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !sessionData.session?.access_token) {
+      throw new Error("Please sign in to send the customer link.");
+    }
+
+    const response = await fetch(`/api/orders/${id}/send-customer-link`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${sessionData.session.access_token}`,
+      },
+    });
+
+    const payload = (await response.json().catch(() => ({}))) as {
+      error?: string;
+      emailStatus?: "sent" | "failed";
+    };
+
+    if (!response.ok && response.status !== 202) {
+      throw new Error(payload.error || "Could not send the customer link.");
+    }
+
+    return {
+      order: await orderService.getById(id),
+      emailStatus: payload.emailStatus ?? "failed",
+      error: payload.error,
+    };
   },
 
   async updateStatus(id: string, status: OrderStatus, note?: string): Promise<Order | undefined> {

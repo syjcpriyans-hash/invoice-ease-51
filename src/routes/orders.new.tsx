@@ -161,8 +161,26 @@ function CreateOrderPage() {
         taxRate: values.taxRate,
         shipping: values.shipping,
       });
+
       setCreatedOrder(order);
-      toast.success("Customer link created");
+
+      try {
+        const delivery = await orderService.sendCustomerLink(order.id);
+        setCreatedOrder(delivery.order ?? order);
+        if (delivery.emailStatus === "sent") {
+          toast.success(`Customer link emailed to ${order.customerEmail}`);
+        } else {
+          toast.error(delivery.error || "The order was created, but the customer-link email failed.");
+        }
+      } catch (emailError) {
+        const refreshed = await orderService.getById(order.id).catch(() => undefined);
+        setCreatedOrder(refreshed ?? order);
+        toast.error(
+          emailError instanceof Error
+            ? `Order created, but the customer-link email failed: ${emailError.message}`
+            : "Order created, but the customer-link email failed.",
+        );
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not create the order");
     } finally {
@@ -181,7 +199,7 @@ function CreateOrderPage() {
           description="Line items, pricing and tax are locked once the customer link is generated."
           actions={
             <Button type="submit" size="sm" disabled={submitting}>
-              {submitting ? "Creating…" : "Create Customer Link"}
+              {submitting ? "Creating and emailing…" : "Create Order and Email Link"}
             </Button>
           }
         />
@@ -322,7 +340,7 @@ function CreateOrderPage() {
             <Link to="/orders">Cancel</Link>
           </Button>
           <Button type="submit" disabled={submitting}>
-            {submitting ? "Creating…" : "Create Customer Link"}
+            {submitting ? "Creating and emailing…" : "Create Order and Email Link"}
           </Button>
         </div>
       </form>
@@ -339,10 +357,15 @@ function CreateOrderPage() {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Customer link created</DialogTitle>
+            <DialogTitle>
+              {createdOrder?.customerLinkEmailStatus === "sent"
+                ? "Customer link emailed"
+                : "Order created — email needs attention"}
+            </DialogTitle>
             <DialogDescription>
-              Send this link to {createdOrder?.customerEmail}. The order is locked and the customer can
-              only add billing information.
+              {createdOrder?.customerLinkEmailStatus === "sent"
+                ? `The secure billing-information link was automatically emailed to ${createdOrder.customerEmail}.`
+                : `The order was saved, but the automatic email was not confirmed. You can use the fallback link below or retry from the order page.`}
             </DialogDescription>
           </DialogHeader>
           <div className="rounded-md border border-border bg-muted/50 px-3 py-2">

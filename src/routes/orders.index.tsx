@@ -46,10 +46,10 @@ const FILTERS = [
 type FilterKey = (typeof FILTERS)[number]["key"];
 
 const GROUPS: Record<Exclude<FilterKey, "all">, OrderStatus[]> = {
-  awaiting: ["draft", "link_sent", "form_opened"],
+  awaiting: ["draft", "link_created", "link_sent", "link_email_failed", "form_opened"],
   submitted: ["submitted"],
   completed: ["invoice_generating", "invoice_generated", "email_queued", "email_sent", "delivered"],
-  failed: ["failed"],
+  failed: ["link_email_failed", "failed"],
 };
 
 function OrdersPage() {

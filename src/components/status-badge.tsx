@@ -7,7 +7,9 @@ const base =
 
 const orderStyles: Record<OrderStatus, string> = {
   draft: "border-border bg-muted text-muted-foreground",
+  link_created: "border-warning/30 bg-warning/10 text-warning",
   link_sent: "border-primary/20 bg-primary/5 text-primary",
+  link_email_failed: "border-destructive/30 bg-destructive/10 text-destructive",
   form_opened: "border-warning/30 bg-warning/10 text-warning",
   submitted: "border-primary/25 bg-primary/10 text-primary",
   invoice_generating: "border-warning/30 bg-warning/10 text-warning",

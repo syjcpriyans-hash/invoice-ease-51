@@ -65,7 +65,7 @@ function DashboardPage() {
     };
   }, []);
 
-  const awaiting = orders?.filter((o) => ["draft", "link_sent", "form_opened"].includes(o.status)).length ?? 0;
+  const awaiting = orders?.filter((o) => ["draft", "link_created", "link_sent", "link_email_failed", "form_opened"].includes(o.status)).length ?? 0;
   const submitted = orders?.filter((o) => !!o.customerInformation).length ?? 0;
   const generated = invoices.length;
   const delivered = invoices.filter((i) => i.emailStatus === "delivered").length;

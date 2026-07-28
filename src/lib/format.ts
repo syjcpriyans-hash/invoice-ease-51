@@ -108,7 +108,9 @@ export function orderTotals(order: Order): OrderTotals {
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   draft: "Draft",
+  link_created: "Link Created",
   link_sent: "Link Sent",
+  link_email_failed: "Link Email Failed",
   form_opened: "Form Opened",
   submitted: "Submitted",
   invoice_generating: "Generating Invoice",

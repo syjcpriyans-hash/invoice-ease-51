@@ -1,6 +1,8 @@
 export type OrderStatus =
   | "draft"
+  | "link_created"
   | "link_sent"
+  | "link_email_failed"
   | "form_opened"
   | "submitted"
   | "invoice_generating"
@@ -9,6 +11,8 @@ export type OrderStatus =
   | "email_sent"
   | "delivered"
   | "failed";
+
+export type CustomerLinkEmailStatus = "not_sent" | "queued" | "sent" | "failed";
 
 export type EmailStatus =
   | "not_generated"
@@ -88,6 +92,10 @@ export interface Order {
   taxRate: number;
   shipping: number;
   status: OrderStatus;
+  customerLinkEmailStatus: CustomerLinkEmailStatus;
+  customerLinkEmailProviderId?: string;
+  customerLinkEmailSentAt?: string;
+  customerLinkEmailLastError?: string;
   token: string;
   createdAt: string;
   updatedAt: string;
