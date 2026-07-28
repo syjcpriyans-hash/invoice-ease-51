@@ -86,7 +86,7 @@ function CustomerFormPage() {
       poNumber: "",
       billingAddress: { ...emptyAddress },
       shippingSameAsBilling: true,
-      shippingAddress: { ...emptyAddress },
+      shippingAddress: undefined,
       confirmedAccurate: undefined as unknown as true,
       confirmedAuthorized: undefined as unknown as true,
     },
@@ -139,6 +139,17 @@ function CustomerFormPage() {
   const alreadySubmitted = !!order.customerInformation;
   const sameAsBilling = form.watch("shippingSameAsBilling");
   const errors = form.formState.errors;
+
+  function onInvalid() {
+    toast.error("Please complete all required fields. The first incomplete field is highlighted.");
+    window.setTimeout(() => {
+      const firstInvalid = document.querySelector<HTMLElement>(
+        '[aria-invalid="true"], [role="alert"]',
+      );
+      firstInvalid?.scrollIntoView({ behavior: "smooth", block: "center" });
+      if ("focus" in (firstInvalid ?? {})) firstInvalid?.focus();
+    }, 0);
+  }
 
   async function onSubmit(values: CustomerFormValues) {
     const billing = values.billingAddress as Address;
@@ -200,7 +211,7 @@ function CustomerFormPage() {
             description="We have received your billing details for this order. Your invoice is being prepared."
           />
         ) : (
-          <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)} noValidate>
+          <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit, onInvalid)} noValidate>
             <fieldset className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-xs">
               <legend className="text-sm font-semibold text-foreground">Contact details</legend>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -265,9 +276,20 @@ function CustomerFormPage() {
                 <Checkbox
                   id="shippingSameAsBilling"
                   checked={sameAsBilling}
-                  onCheckedChange={(checked) =>
-                    form.setValue("shippingSameAsBilling", checked === true)
-                  }
+                  onCheckedChange={(checked) => {
+                    const isSame = checked === true;
+                    form.setValue("shippingSameAsBilling", isSame, {
+                      shouldDirty: true,
+                      shouldValidate: true,
+                    });
+                    if (isSame) {
+                      form.setValue("shippingAddress", undefined, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      });
+                      form.clearErrors("shippingAddress");
+                    }
+                  }}
                 />
                 <Label htmlFor="shippingSameAsBilling">Shipping address same as billing address</Label>
               </div>
@@ -289,6 +311,8 @@ function CustomerFormPage() {
                   checked={form.watch("confirmedAccurate") === true}
                   onCheckedChange={(checked) =>
                     form.setValue("confirmedAccurate", (checked === true) as true, {
+                      shouldDirty: true,
+                      shouldTouch: true,
                       shouldValidate: true,
                     })
                   }
@@ -308,6 +332,8 @@ function CustomerFormPage() {
                   checked={form.watch("confirmedAuthorized") === true}
                   onCheckedChange={(checked) =>
                     form.setValue("confirmedAuthorized", (checked === true) as true, {
+                      shouldDirty: true,
+                      shouldTouch: true,
                       shouldValidate: true,
                     })
                   }
