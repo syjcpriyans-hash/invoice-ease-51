@@ -1,46 +1,65 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   ArrowRight,
-  CheckCircle2,
-  Clock3,
-  FileSpreadsheet,
-  FileText,
+  Check,
+  ChevronRight,
+  CircleCheck,
+  FileCheck2,
+  KeyRound,
   LockKeyhole,
-  Mail,
+  MailCheck,
+  ReceiptText,
   ShieldCheck,
-  Sparkles,
-  Users,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { APP_CONFIG } from '@/config/app';
 import { SiteLogo } from '@/components/site-logo';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
 import { waitlistService } from '@/services/waitlistService';
 
 export const Route = createFileRoute('/')({
   head: () => ({
     meta: [
-      { title: `${APP_CONFIG.name} — Automated order-to-invoice workflow` },
+      { title: `${APP_CONFIG.name} — Automated intake-to-invoice` },
       {
         name: 'description',
         content:
-          'Capture customer billing details with one secure link and automate the order-to-invoice workflow.',
+          'Turn a confirmed order into a delivered invoice with one secure customer link and no manual re-entry.',
       },
-      { property: 'og:title', content: `${APP_CONFIG.name} — Coming soon` },
+      { property: 'og:title', content: `${APP_CONFIG.name} — Automated intake-to-invoice` },
       {
         property: 'og:description',
         content:
-          'Join the waitlist for a simpler order-to-invoice workflow built for fast-moving businesses.',
+          'Collect customer billing details, generate the invoice, and send it automatically.',
       },
     ],
   }),
   component: LandingPage,
 });
+
+const workflowRows = [
+  {
+    label: 'Order confirmed',
+    detail: 'Locked pricing and line items',
+    state: 'Complete',
+    icon: FileCheck2,
+  },
+  {
+    label: 'Customer details collected',
+    detail: 'Secure form submitted',
+    state: 'Complete',
+    icon: KeyRound,
+  },
+  {
+    label: 'Invoice delivered',
+    detail: 'PDF generated and emailed',
+    state: 'Delivered',
+    icon: MailCheck,
+  },
+];
 
 function LandingPage() {
   const [fullName, setFullName] = useState('');
@@ -49,31 +68,22 @@ function LandingPage() {
   const [email, setEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const stats = useMemo(
-    () => [
-      { value: '2–3 min', label: 'Saved per invoice workflow' },
-      { value: '1 link', label: 'Needed from your internal team' },
-      { value: '0 back-and-forth', label: 'When customer details are submitted correctly' },
-    ],
-    [],
-  );
-
   async function handleWaitlistSubmit(event: React.FormEvent) {
     event.preventDefault();
 
     if (!email.trim()) {
-      toast.error('Please enter your email address.');
+      toast.error('Enter your work email to join the waitlist.');
       return;
     }
 
     setSubmitting(true);
     try {
       const result = await waitlistService.join({ email, fullName, companyName, role });
-      if (result.status === 'already_joined') {
-        toast.success("You're already on the waitlist.");
-      } else {
-        toast.success('You are on the waitlist. We will notify you when we launch.');
-      }
+      toast.success(
+        result.status === 'already_joined'
+          ? "You're already on the waitlist."
+          : 'You are on the waitlist. We will contact you when early access opens.',
+      );
       setFullName('');
       setCompanyName('');
       setRole('');
@@ -86,301 +96,405 @@ function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border/70 bg-background/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
-          <SiteLogo imageClassName="h-10 md:h-11" />
-          <Button asChild size="sm">
+    <div className="landing-page min-h-screen bg-background text-foreground">
+      <a
+        href="#main-content"
+        className="sr-only fixed left-4 top-4 z-50 rounded-md bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only"
+      >
+        Skip to content
+      </a>
+
+      <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-md">
+        <div className="marketing-container flex h-16 items-center justify-between">
+          <SiteLogo />
+          <nav className="hidden items-center gap-7 text-sm font-medium text-muted-foreground md:flex" aria-label="Primary navigation">
+            <a className="landing-nav-link" href="#workflow">Workflow</a>
+            <a className="landing-nav-link" href="#controls">Controls</a>
+            <a className="landing-nav-link" href="#waitlist">Early access</a>
+          </nav>
+          <Button asChild size="sm" className="h-10 rounded-md px-4">
             <a href="#waitlist">Join waitlist</a>
           </Button>
         </div>
       </header>
 
-      <main>
-        <section className="relative overflow-hidden">
-          <div className="absolute inset-x-0 top-0 -z-10 h-[28rem] bg-[radial-gradient(circle_at_top,rgba(18,124,168,0.10),transparent_55%)]" />
-          <div className="mx-auto grid max-w-7xl gap-14 px-6 py-18 lg:grid-cols-[1.1fr_0.9fr] lg:px-8 lg:py-24">
-            <div className="max-w-2xl">
-              <Badge variant="secondary" className="mb-5 rounded-full px-3 py-1 text-xs font-medium">
-                Coming soon · early access waitlist
-              </Badge>
-              <h1 className="text-4xl font-semibold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-                Stop chasing customer details just to send one invoice.
+      <main id="main-content">
+        <section className="border-b border-border/80">
+          <div className="marketing-container grid gap-14 py-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-28">
+            <div className="landing-reveal max-w-3xl">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-slate">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
+                Early access opening soon
+              </div>
+              <h1 className="font-heading text-[42px] font-semibold leading-[1.08] tracking-[-0.045em] text-balance sm:text-[52px] lg:text-[60px]">
+                From confirmed order to delivered invoice—without the handoffs.
               </h1>
-              <p className="mt-6 text-lg leading-8 text-muted-foreground">
-                {APP_CONFIG.name} helps businesses turn a confirmed order into an invoice-ready workflow.
-                You send one secure link, the customer fills in their billing details, and the system handles the next steps.
+              <p className="mt-6 max-w-2xl text-[18px] leading-8 text-muted-foreground">
+                Invoice Ease collects customer billing details through one secure link, creates the invoice, and sends it automatically. Your team enters the order once. The workflow finishes itself.
               </p>
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Button asChild size="lg" className="gap-2">
+                <Button asChild size="lg" className="h-11 rounded-md px-5">
                   <a href="#waitlist">
-                    {APP_CONFIG.waitlistCta}
-                    <ArrowRight className="h-4 w-4" />
+                    Join the early-access waitlist
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </a>
                 </Button>
-                <Button asChild variant="outline" size="lg">
-                  <a href="#how-it-works">See how it works</a>
+                <Button asChild variant="outline" size="lg" className="h-11 rounded-md px-5">
+                  <a href="#workflow">See the workflow</a>
                 </Button>
               </div>
-
-              <div className="mt-10 grid gap-4 sm:grid-cols-3">
-                {stats.map((stat) => (
-                  <Card key={stat.label} className="border-border/80 bg-card/70 shadow-none">
-                    <CardContent className="p-5">
-                      <p className="text-xl font-semibold">{stat.value}</p>
-                      <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
-                    </CardContent>
-                  </Card>
-                ))}
+              <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted-foreground" aria-label="Product trust signals">
+                <TrustLine>Private customer links</TrustLine>
+                <TrustLine>Server-side totals</TrustLine>
+                <TrustLine>Auditable invoice records</TrustLine>
               </div>
             </div>
 
-            <Card className="border-border/80 bg-card shadow-sm">
-              <CardContent className="p-6 sm:p-8">
-                <div className="mb-6 flex items-center gap-3">
-                  <div className="rounded-xl bg-primary/10 p-3 text-primary">
-                    <FileSpreadsheet className="h-5 w-5" />
-                  </div>
+            <div className="landing-reveal landing-reveal-delay relative">
+              <div className="absolute -inset-8 -z-10 bg-[radial-gradient(circle_at_center,rgba(49,89,216,0.10),transparent_68%)]" aria-hidden="true" />
+              <div className="overflow-hidden rounded-lg border border-border bg-surface shadow-[0_18px_55px_rgba(20,32,51,0.08)]">
+                <div className="flex items-center justify-between border-b border-border px-5 py-4">
                   <div>
-                    <p className="font-semibold">What the product will do</p>
-                    <p className="text-sm text-muted-foreground">Built for order-confirmation to invoice workflows</p>
+                    <p className="text-sm font-semibold">Order ORD-2048</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">Northstar Pharmacy</p>
                   </div>
+                  <span className="status-chip status-chip-success">Completed</span>
                 </div>
-                <div className="space-y-4">
-                  {[
-                    'Lock the order details and send one customer information link',
-                    'Collect business, billing, and shipping information in one place',
-                    'Generate invoices faster with less internal follow-up',
-                    'Reduce repetitive admin work for teams handling many invoices per day',
-                  ].map((item) => (
-                    <div key={item} className="flex items-start gap-3 rounded-xl border border-border/70 p-4">
-                      <CheckCircle2 className="mt-0.5 h-5 w-5 text-primary" />
-                      <p className="text-sm leading-6 text-foreground">{item}</p>
+
+                <div className="px-5 py-2">
+                  {workflowRows.map((row, index) => (
+                    <div key={row.label} className="ledger-row group relative grid grid-cols-[36px_1fr_auto] items-center gap-3 py-4">
+                      <span className="ledger-marker" aria-hidden="true" />
+                      <span className="flex h-8 w-8 items-center justify-center rounded-md bg-secondary text-primary">
+                        <row.icon className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium">{row.label}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{row.detail}</p>
+                      </div>
+                      <span className="text-xs font-medium text-positive">{row.state}</span>
+                      {index < workflowRows.length - 1 ? (
+                        <span className="absolute bottom-[-1px] left-0 right-0 h-px bg-border" aria-hidden="true" />
+                      ) : null}
                     </div>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
+
+                <div className="border-t border-border bg-canvas px-5 py-4">
+                  <div className="grid grid-cols-2 gap-6 text-sm">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Invoice</p>
+                      <p className="mt-1 font-data font-medium tabular-nums">INV-1042</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Total</p>
+                      <p className="mt-1 font-data text-lg font-semibold tabular-nums">$5,311.00</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        <section className="border-y border-border/70 bg-muted/30">
-          <div className="mx-auto max-w-7xl px-6 py-14 lg:px-8">
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
-              <FeatureCard
-                icon={Clock3}
-                title="Save admin time"
-                description="Avoid typing the same billing details repeatedly into your invoice workflow."
+        <section id="workflow" className="border-b border-border/80 bg-surface">
+          <div className="marketing-container py-20 lg:py-24">
+            <SectionIntro
+              eyebrow="One controlled workflow"
+              title="Remove the re-entry, follow-up, and file handling."
+              description="The workflow is designed around the exact moment after an order is confirmed—when teams usually start copying details between email, forms, invoicing software, and customer messages."
+            />
+
+            <div className="mt-12 border-y border-border">
+              <WorkflowStep
+                number="01"
+                title="Create the confirmed order"
+                description="Lock the products, quantities, prices, tax, and payment terms before anything reaches the customer."
+                outcome="One source of truth"
               />
-              <FeatureCard
-                icon={Mail}
-                title="One secure customer link"
-                description="Capture customer details in a clean workflow instead of messy email back-and-forth."
+              <WorkflowStep
+                number="02"
+                title="Collect verified customer details"
+                description="The customer receives a private link and submits billing, shipping, and contact information in a structured form."
+                outcome="No email chasing"
               />
-              <FeatureCard
-                icon={ShieldCheck}
-                title="Structured information"
-                description="Keep order details locked and collect customer information in a controlled format."
-              />
-              <FeatureCard
-                icon={LockKeyhole}
-                title="Private internal dashboard"
-                description="Your operational dashboard remains for your team, while the public sees only the landing page."
+              <WorkflowStep
+                number="03"
+                title="Generate and deliver the invoice"
+                description="Invoice numbering, PDF generation, storage, and email delivery run automatically after a valid submission."
+                outcome="No manual handoff"
               />
             </div>
           </div>
         </section>
 
-        <section id="how-it-works" className="mx-auto max-w-7xl px-6 py-18 lg:px-8">
-          <div className="max-w-2xl">
-            <Badge variant="secondary" className="mb-4">How it works</Badge>
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              A simpler workflow from confirmed order to invoice.
-            </h2>
-            <p className="mt-4 text-base leading-7 text-muted-foreground">
-              We are building {APP_CONFIG.name} for teams that already know what was ordered but lose time collecting customer details and turning them into invoices.
-            </p>
-          </div>
+        <section id="controls" className="border-b border-border/80">
+          <div className="marketing-container grid gap-14 py-20 lg:grid-cols-[0.82fr_1.18fr] lg:py-24">
+            <SectionIntro
+              eyebrow="Built for billing operations"
+              title="Automation with financial controls—not shortcuts."
+              description="Fast is useful only when the amounts, recipients, and records remain correct. Invoice Ease keeps customer input separate from locked commercial terms and records every workflow state."
+            />
 
-          <div className="mt-10 grid gap-5 lg:grid-cols-4">
-            {[
-              {
-                title: '1. Confirm the order',
-                description: 'Your team locks the products, quantities, and pricing for the order.',
-                icon: FileText,
-              },
-              {
-                title: '2. Send one link',
-                description: 'The customer receives a secure link to provide the required billing information.',
-                icon: Mail,
-              },
-              {
-                title: '3. Customer submits details',
-                description: 'Business, billing, shipping, and contact details are captured in a structured form.',
-                icon: Users,
-              },
-              {
-                title: '4. Invoice workflow completes',
-                description: 'The system prepares the invoice workflow without repeated manual follow-up.',
-                icon: Sparkles,
-              },
-            ].map((step) => (
-              <Card key={step.title} className="border-border/80 shadow-none">
-                <CardContent className="p-6">
-                  <div className="mb-4 inline-flex rounded-xl bg-primary/10 p-3 text-primary">
-                    <step.icon className="h-5 w-5" />
-                  </div>
-                  <h3 className="font-semibold">{step.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{step.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+            <div className="border-t border-border">
+              <ControlRow
+                icon={LockKeyhole}
+                title="Locked commercial terms"
+                description="Customers can provide their details, but cannot alter products, pricing, discounts, tax, or payment terms."
+              />
+              <ControlRow
+                icon={ShieldCheck}
+                title="Server-side validation"
+                description="Totals and required fields are recalculated and validated before an invoice can be created."
+              />
+              <ControlRow
+                icon={ReceiptText}
+                title="Consistent invoice records"
+                description="Invoice numbers, PDFs, order references, and delivery states remain connected in one auditable record."
+              />
+              <ControlRow
+                icon={MailCheck}
+                title="Delivery visibility"
+                description="Link and invoice email states are visible to the team, with retry paths when an exception occurs."
+              />
+            </div>
           </div>
         </section>
 
-        <section id="waitlist" className="border-y border-border/70 bg-card">
-          <div className="mx-auto grid max-w-7xl gap-10 px-6 py-18 lg:grid-cols-[0.9fr_1.1fr] lg:px-8">
-            <div className="max-w-xl">
-              <Badge variant="secondary" className="mb-4">Join the waitlist</Badge>
-              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-                Want early access when {APP_CONFIG.name} launches?
+        <section className="border-b border-border/80 bg-ink text-white">
+          <div className="marketing-container grid gap-10 py-16 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div className="max-w-3xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60">Designed for repeat B2B invoicing</p>
+              <h2 className="mt-4 font-heading text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
+                Built for teams where two minutes per invoice becomes hours every month.
               </h2>
-              <p className="mt-4 text-base leading-7 text-muted-foreground">
-                Join the waitlist if you regularly create invoices, chase billing details, or run operations for a team that handles repeat B2B orders.
+              <p className="mt-4 max-w-2xl text-base leading-7 text-white/70">
+                Wholesalers, distributors, equipment suppliers, and operations teams can keep the flexibility of confirmed-order sales without carrying the administrative work into every invoice.
               </p>
-              <div className="mt-8 space-y-4 text-sm text-muted-foreground">
-                <p>Ideal for wholesalers, distributors, equipment businesses, and teams with repetitive invoice preparation work.</p>
-                <p>We’ll use this list to share launch updates, onboarding invites, and early product access.</p>
+            </div>
+            <Button asChild size="lg" variant="secondary" className="h-11 justify-self-start rounded-md px-5 text-foreground lg:justify-self-end">
+              <a href="#waitlist">Request early access</a>
+            </Button>
+          </div>
+        </section>
+
+        <section id="waitlist" className="border-b border-border/80 bg-surface">
+          <div className="marketing-container grid gap-14 py-20 lg:grid-cols-[0.82fr_1.18fr] lg:py-24">
+            <div className="max-w-xl">
+              <p className="section-eyebrow">Early access</p>
+              <h2 className="mt-4 font-heading text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
+                Join the teams shaping the first release.
+              </h2>
+              <p className="mt-5 text-base leading-7 text-muted-foreground">
+                Tell us where invoice preparation slows your team down. Early users will receive launch updates and may be invited into a guided pilot.
+              </p>
+              <div className="mt-8 border-t border-border pt-6">
+                <p className="text-sm font-medium">Good fit for:</p>
+                <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
+                  <WaitlistFit>Teams creating many B2B invoices each day</WaitlistFit>
+                  <WaitlistFit>Orders confirmed outside an online checkout</WaitlistFit>
+                  <WaitlistFit>Businesses collecting billing details by email</WaitlistFit>
+                </ul>
               </div>
             </div>
 
-            <Card className="border-border/80 shadow-sm">
-              <CardContent className="p-6 sm:p-8">
-                <form className="space-y-5" onSubmit={handleWaitlistSubmit}>
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="fullName">Full name</Label>
-                      <Input
-                        id="fullName"
-                        value={fullName}
-                        onChange={(event) => setFullName(event.target.value)}
-                        placeholder="Priyans Kevadia"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="companyName">Company name</Label>
-                      <Input
-                        id="companyName"
-                        value={companyName}
-                        onChange={(event) => setCompanyName(event.target.value)}
-                        placeholder="Delmen Medical Supply"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Work email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        required
-                        value={email}
-                        onChange={(event) => setEmail(event.target.value)}
-                        placeholder="you@company.com"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="role">Your role</Label>
-                      <Input
-                        id="role"
-                        value={role}
-                        onChange={(event) => setRole(event.target.value)}
-                        placeholder="Operations, Sales, Admin"
-                      />
-                    </div>
-                  </div>
-
-                  <Button className="w-full sm:w-auto" size="lg" disabled={submitting}>
-                    {submitting ? 'Joining waitlist…' : 'Join the waitlist'}
-                  </Button>
-                  <p className="text-xs leading-6 text-muted-foreground">
-                    By joining, you agree to receive early product updates about {APP_CONFIG.name}. No spam.
-                  </p>
-                </form>
-              </CardContent>
-            </Card>
+            <form className="rounded-lg border border-border bg-background p-6 sm:p-8" onSubmit={handleWaitlistSubmit}>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <Field label="Full name" htmlFor="fullName">
+                  <Input
+                    id="fullName"
+                    value={fullName}
+                    onChange={(event) => setFullName(event.target.value)}
+                    placeholder="Priyans Kevadia"
+                    className="h-10 rounded-md bg-surface"
+                  />
+                </Field>
+                <Field label="Company name" htmlFor="companyName">
+                  <Input
+                    id="companyName"
+                    value={companyName}
+                    onChange={(event) => setCompanyName(event.target.value)}
+                    placeholder="Company name"
+                    className="h-10 rounded-md bg-surface"
+                  />
+                </Field>
+                <Field label="Work email" htmlFor="email">
+                  <Input
+                    id="email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="you@company.com"
+                    className="h-10 rounded-md bg-surface"
+                  />
+                </Field>
+                <Field label="Your role" htmlFor="role">
+                  <Input
+                    id="role"
+                    value={role}
+                    onChange={(event) => setRole(event.target.value)}
+                    placeholder="Operations, sales, finance"
+                    className="h-10 rounded-md bg-surface"
+                  />
+                </Field>
+              </div>
+              <div className="mt-6 flex flex-col gap-4 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
+                <p className="max-w-md text-xs leading-5 text-muted-foreground">
+                  We will use your information only for Invoice Ease launch and early-access communication.
+                </p>
+                <Button className="h-11 shrink-0 rounded-md px-5" disabled={submitting}>
+                  {submitting ? 'Joining…' : 'Join waitlist'}
+                  {!submitting ? <ArrowRight className="h-4 w-4" aria-hidden="true" /> : null}
+                </Button>
+              </div>
+            </form>
           </div>
         </section>
 
-        <section className="mx-auto max-w-7xl px-6 py-18 lg:px-8">
-          <div className="max-w-2xl">
-            <Badge variant="secondary" className="mb-4">Frequently asked</Badge>
-            <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">A few quick answers.</h2>
-          </div>
-          <div className="mt-10 grid gap-5 md:grid-cols-2">
-            <FaqCard
-              question="Is the product live today?"
-              answer="Not yet. The public site is a waitlist page while the core product is being completed."
+        <section className="bg-background">
+          <div className="marketing-container py-20 lg:py-24">
+            <SectionIntro
+              eyebrow="Questions"
+              title="What early users should know."
+              description="The first release is focused on one job: completing the confirmed-order-to-invoice workflow with less manual intervention."
             />
-            <FaqCard
-              question="Will the dashboard be public?"
-              answer="No. The public website is the landing page. The operational dashboard remains for internal or invited users only."
-            />
-            <FaqCard
-              question="Who is it for?"
-              answer="Businesses that repeatedly create invoices after order confirmation and spend time collecting billing details manually."
-            />
-            <FaqCard
-              question="What happens after I join the waitlist?"
-              answer="You’ll receive launch updates and may be invited for early access or onboarding when the product is ready."
-            />
+            <div className="mt-10 grid border-t border-border md:grid-cols-2">
+              <FaqItem question="Is the product live today?">
+                The working MVP is in controlled testing. The public site is collecting early-access interest while reliability and production controls are completed.
+              </FaqItem>
+              <FaqItem question="Can customers change an order?">
+                No. Commercial terms remain locked. Customers provide only the billing, shipping, contact, and authorization information required for invoicing.
+              </FaqItem>
+              <FaqItem question="Does the customer need an account?">
+                No. The customer receives a secure, order-specific link and can submit the required information without creating a login.
+              </FaqItem>
+              <FaqItem question="Who can access the dashboard?">
+                Only authenticated team users. The public website and customer forms do not expose operational dashboard data.
+              </FaqItem>
+            </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-border/70 bg-muted/30">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <div className="flex items-center gap-3">
-            <SiteLogo imageClassName="h-8" />
-            <span>© {new Date().getFullYear()} {APP_CONFIG.name}. All rights reserved.</span>
-          </div>
-          <a href="#waitlist" className="hover:text-foreground">Join waitlist</a>
+      <footer className="border-t border-border bg-surface">
+        <div className="marketing-container flex flex-col gap-5 py-8 sm:flex-row sm:items-center sm:justify-between">
+          <SiteLogo />
+          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Invoice Ease. Automated intake-to-invoice.</p>
         </div>
       </footer>
     </div>
   );
 }
 
-function FeatureCard({
-  icon: Icon,
+function TrustLine({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-2">
+      <CircleCheck className="h-4 w-4 text-positive" aria-hidden="true" />
+      {children}
+    </span>
+  );
+}
+
+function SectionIntro({
+  eyebrow,
   title,
   description,
 }: {
-  icon: typeof Clock3;
+  eyebrow: string;
   title: string;
   description: string;
 }) {
   return (
-    <Card className="border-border/80 bg-card shadow-none">
-      <CardContent className="p-6">
-        <div className="mb-4 inline-flex rounded-xl bg-primary/10 p-3 text-primary">
-          <Icon className="h-5 w-5" />
-        </div>
-        <h3 className="font-semibold">{title}</h3>
-        <p className="mt-2 text-sm leading-6 text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
+    <div className="max-w-2xl">
+      <p className="section-eyebrow">{eyebrow}</p>
+      <h2 className="mt-4 font-heading text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">{title}</h2>
+      <p className="mt-5 text-base leading-7 text-muted-foreground">{description}</p>
+    </div>
   );
 }
 
-function FaqCard({ question, answer }: { question: string; answer: string }) {
+function WorkflowStep({
+  number,
+  title,
+  description,
+  outcome,
+}: {
+  number: string;
+  title: string;
+  description: string;
+  outcome: string;
+}) {
   return (
-    <Card className="border-border/80 shadow-none">
-      <CardContent className="p-6">
-        <h3 className="font-semibold">{question}</h3>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">{answer}</p>
-      </CardContent>
-    </Card>
+    <div className="ledger-row group relative grid gap-5 border-b border-border py-7 last:border-b-0 md:grid-cols-[64px_1fr_220px] md:items-center">
+      <span className="ledger-marker" aria-hidden="true" />
+      <span className="font-data text-xs font-semibold tracking-[0.08em] text-muted-foreground">{number}</span>
+      <div>
+        <h3 className="font-heading text-lg font-semibold tracking-[-0.015em]">{title}</h3>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>
+      </div>
+      <div className="flex items-center justify-between text-sm font-medium md:justify-end md:gap-3">
+        <span>{outcome}</span>
+        <ChevronRight className="h-4 w-4 text-primary" aria-hidden="true" />
+      </div>
+    </div>
+  );
+}
+
+function ControlRow({
+  icon: Icon,
+  title,
+  description,
+}: {
+  icon: typeof ShieldCheck;
+  title: string;
+  description: string;
+}) {
+  return (
+    <div className="ledger-row group relative grid grid-cols-[40px_1fr] gap-4 border-b border-border py-6 last:border-b-0">
+      <span className="ledger-marker" aria-hidden="true" />
+      <span className="flex h-9 w-9 items-center justify-center rounded-md bg-secondary text-primary">
+        <Icon className="h-4 w-4" aria-hidden="true" />
+      </span>
+      <div>
+        <h3 className="text-sm font-semibold">{title}</h3>
+        <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+function WaitlistFit({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-3">
+      <Check className="mt-0.5 h-4 w-4 shrink-0 text-positive" aria-hidden="true" />
+      <span>{children}</span>
+    </li>
+  );
+}
+
+function Field({
+  label,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  htmlFor: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={htmlFor} className="text-sm font-semibold">{label}</Label>
+      {children}
+    </div>
+  );
+}
+
+function FaqItem({ question, children }: { question: string; children: React.ReactNode }) {
+  return (
+    <div className="faq-item border-b border-border py-7 md:min-h-44 md:px-8">
+      <h3 className="text-sm font-semibold">{question}</h3>
+      <p className="mt-3 text-sm leading-6 text-muted-foreground">{children}</p>
+    </div>
   );
 }
