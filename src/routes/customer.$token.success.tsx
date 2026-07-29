@@ -12,8 +12,12 @@ import type { Order } from "@/types";
 export const Route = createFileRoute("/customer/$token/success")({
   head: () => ({
     meta: [
-      { title: "Information submitted — InvoiceFlow" },
-      { name: "description", content: "Your billing information was submitted and your invoice is being prepared." },
+      { title: "Information submitted | Billantra" },
+      {
+        name: "description",
+        content:
+          "Your billing information was submitted and your invoice is being prepared.",
+      },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -22,7 +26,9 @@ export const Route = createFileRoute("/customer/$token/success")({
 
 function CustomerSuccessPage() {
   const { token } = Route.useParams();
-  const [order, setOrder] = useState<Order | null | undefined>(undefined);
+  const [order, setOrder] = useState<Order | null | undefined>(
+    undefined,
+  );
   const [automation, setAutomation] = useState<{
     invoiceNumber?: string;
     emailStatus?: "sent" | "failed";
@@ -30,7 +36,10 @@ function CustomerSuccessPage() {
   } | null>(null);
 
   useEffect(() => {
-    const saved = window.sessionStorage.getItem(`invoice-ease-submission-${token}`);
+    const saved = window.sessionStorage.getItem(
+      `invoice-ease-submission-${token}`,
+    );
+
     if (saved) {
       try {
         setAutomation(JSON.parse(saved));
@@ -40,6 +49,7 @@ function CustomerSuccessPage() {
     }
 
     let active = true;
+
     orderService
       .getByToken(token)
       .then((data) => {
@@ -48,6 +58,7 @@ function CustomerSuccessPage() {
       .catch(() => {
         if (active) setOrder(null);
       });
+
     return () => {
       active = false;
     };
@@ -55,7 +66,7 @@ function CustomerSuccessPage() {
 
   if (order === undefined) {
     return (
-      <div className="min-h-screen bg-background p-6">
+      <div className="min-h-screen bg-[#FAF7F4] p-6">
         <LoadingState />
       </div>
     );
@@ -63,52 +74,92 @@ function CustomerSuccessPage() {
 
   if (order === null) {
     return (
-      <div className="min-h-screen bg-background p-6">
-        <ErrorState title="This link is not valid" description="Please contact the seller for a new link." />
+      <div className="min-h-screen bg-[#FAF7F4] p-6">
+        <ErrorState
+          title="This link is not valid"
+          description="Please contact the seller for a new link."
+        />
       </div>
     );
   }
 
   const totals = orderTotals(order);
+  const failed = automation?.emailStatus === "failed";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#FAF7F4]">
       <CustomerHeader sellerName={order.sellerName ?? "Seller"} />
-      <main className="mx-auto w-full max-w-3xl space-y-6 px-4 py-10 sm:px-6">
-        <section className="flex flex-col items-center gap-3 rounded-lg border border-border bg-card p-8 text-center shadow-xs">
-          {automation?.emailStatus === "failed" ? (
-            <AlertTriangle className="h-10 w-10 text-warning" aria-hidden="true" />
+
+      <main className="mx-auto w-full max-w-4xl space-y-7 px-4 py-10 sm:px-6">
+        <section
+          className={
+            failed
+              ? "rounded-xl bg-[#071226] p-8 text-center text-[#FAF7F4]"
+              : "rounded-xl bg-[#D5A125] p-8 text-center text-[#071226]"
+          }
+        >
+          {failed ? (
+            <AlertTriangle
+              className="mx-auto h-10 w-10 text-[#D5A125]"
+              aria-hidden="true"
+            />
           ) : (
-            <CheckCircle2 className="h-10 w-10 text-success" aria-hidden="true" />
+            <CheckCircle2
+              className="mx-auto h-10 w-10 text-[#071226]"
+              aria-hidden="true"
+            />
           )}
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+
+          <h1 className="mt-5 text-[28px] font-semibold tracking-[-0.035em]">
             Your information has been submitted
           </h1>
-          <dl className="grid gap-1 text-sm">
+
+          <dl className="mt-5 grid justify-center gap-1 text-sm">
             <div className="flex gap-2">
-              <dt className="text-muted-foreground">Order number:</dt>
-              <dd className="font-medium text-foreground">{order.orderNumber}</dd>
+              <dt className={failed ? "text-[#FAF7F4]/58" : "text-[#071226]/58"}>
+                Order number:
+              </dt>
+              <dd className="font-medium">{order.orderNumber}</dd>
             </div>
             <div className="flex gap-2">
-              <dt className="text-muted-foreground">Customer email:</dt>
-              <dd className="font-medium text-foreground">
-                {order.customerInformation?.email ?? order.customerEmail}
+              <dt className={failed ? "text-[#FAF7F4]/58" : "text-[#071226]/58"}>
+                Customer email:
+              </dt>
+              <dd className="font-medium">
+                {order.customerInformation?.email ??
+                  order.customerEmail}
               </dd>
             </div>
           </dl>
-          <p className="max-w-md text-sm text-muted-foreground">
+
+          <p
+            className={
+              failed
+                ? "mx-auto mt-5 max-w-lg text-sm leading-6 text-[#FAF7F4]/64"
+                : "mx-auto mt-5 max-w-lg text-sm leading-6 text-[#071226]/68"
+            }
+          >
             {automation?.emailStatus === "sent"
               ? `Invoice ${automation.invoiceNumber ?? ""} has been generated and emailed to you.`
               : automation?.emailStatus === "failed"
-                ? "Your billing details were recorded and the invoice was generated, but email delivery needs attention from the seller."
+                ? "Your billing details were recorded and the invoice was generated, but email delivery requires attention from the seller."
                 : "Your billing details have been recorded and the invoice is being processed."}
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-foreground">Order summary</h2>
-          <LockedOrderItems items={order.items} currency={order.currency} />
-          <OrderSummary totals={totals} currency={order.currency} taxRate={order.taxRate} />
+          <h2 className="text-sm font-semibold text-[#071226]">
+            Order summary
+          </h2>
+          <LockedOrderItems
+            items={order.items}
+            currency={order.currency}
+          />
+          <OrderSummary
+            totals={totals}
+            currency={order.currency}
+            taxRate={order.taxRate}
+          />
         </section>
       </main>
     </div>

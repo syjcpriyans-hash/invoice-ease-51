@@ -11,25 +11,26 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { customerInformationSchema, type CustomerFormValues } from "@/lib/schemas";
+import { SiteLogo } from "@/components/site-logo";
+import {
+  customerInformationSchema,
+  type CustomerFormValues,
+} from "@/lib/schemas";
 import { orderService } from "@/services/orderService";
 import { orderTotals } from "@/lib/format";
-import { APP_CONFIG } from "@/config/app";
 import type { Address, Order } from "@/types";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/customer/$token/")({
   head: () => ({
     meta: [
-      { title: "Confirm your billing information — InvoiceFlow" },
+      {
+        title: "Confirm your billing information | Billantra",
+      },
       {
         name: "description",
-        content: "Review your locked order and submit billing details so your invoice can be issued.",
-      },
-      { property: "og:title", content: "Confirm your billing information — InvoiceFlow" },
-      {
-        property: "og:description",
-        content: "Review your locked order and submit billing details so your invoice can be issued.",
+        content:
+          "Review your order and submit the billing information required to issue your invoice.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -46,23 +47,30 @@ const emptyAddress: Address = {
   country: "",
 };
 
-export function CustomerHeader({ sellerName }: { sellerName: string }) {
+export function CustomerHeader({
+  sellerName,
+}: {
+  sellerName: string;
+}) {
   return (
-    <header className="border-b border-border bg-card">
-      <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-4 sm:px-6">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">
-            IF
-          </span>
-          <div>
-            <p className="text-sm font-semibold text-foreground">{sellerName}</p>
-            <p className="text-xs text-muted-foreground">Secure billing information request</p>
-          </div>
+    <header className="border-b border-[#FAF7F4]/10 bg-[#071226]">
+      <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
+        <div>
+          <p className="text-sm font-semibold text-[#FAF7F4]">
+            {sellerName}
+          </p>
+          <p className="mt-0.5 text-xs text-[#FAF7F4]/52">
+            Secure billing information request
+          </p>
         </div>
-        <span className="hidden items-center gap-1.5 text-xs text-muted-foreground sm:flex">
-          <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-          Powered by {APP_CONFIG.name}
-        </span>
+
+        <div className="flex items-center gap-4">
+          <span className="hidden items-center gap-1.5 text-xs text-[#FAF7F4]/52 sm:flex">
+            <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+            Protected form
+          </span>
+          <SiteLogo inverse />
+        </div>
       </div>
     </header>
   );
@@ -71,7 +79,9 @@ export function CustomerHeader({ sellerName }: { sellerName: string }) {
 function CustomerFormPage() {
   const { token } = Route.useParams();
   const navigate = useNavigate();
-  const [order, setOrder] = useState<Order | null | undefined>(undefined);
+  const [order, setOrder] = useState<Order | null | undefined>(
+    undefined,
+  );
   const [submitting, setSubmitting] = useState(false);
   const sellerName = order?.sellerName ?? "Seller";
 
@@ -94,22 +104,30 @@ function CustomerFormPage() {
 
   useEffect(() => {
     let active = true;
+
     orderService
       .getByToken(token)
       .then(async (found) => {
         if (!active) return;
+
         if (!found) {
           setOrder(null);
           return;
         }
+
         setOrder(found);
         form.setValue("email", found.customerEmail);
         await orderService.markFormOpened(token);
       })
       .catch((error) => {
-        toast.error(error instanceof Error ? error.message : "Could not load this order");
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Could not load this order",
+        );
         if (active) setOrder(null);
       });
+
     return () => {
       active = false;
     };
@@ -118,7 +136,7 @@ function CustomerFormPage() {
 
   if (order === undefined) {
     return (
-      <div className="min-h-screen bg-background p-6">
+      <div className="min-h-screen bg-[#FAF7F4] p-6">
         <LoadingState label="Loading your order…" />
       </div>
     );
@@ -126,7 +144,7 @@ function CustomerFormPage() {
 
   if (order === null) {
     return (
-      <div className="min-h-screen bg-background p-6">
+      <div className="min-h-screen bg-[#FAF7F4] p-6">
         <ErrorState
           title="This link is not valid"
           description="The customer information link may have expired or been replaced. Please contact the seller."
@@ -141,12 +159,18 @@ function CustomerFormPage() {
   const errors = form.formState.errors;
 
   function onInvalid() {
-    toast.error("Please complete all required fields. The first incomplete field is highlighted.");
+    toast.error(
+      "Please complete all required fields. The first incomplete field is highlighted.",
+    );
+
     window.setTimeout(() => {
       const firstInvalid = document.querySelector<HTMLElement>(
         '[aria-invalid="true"], [role="alert"]',
       );
-      firstInvalid?.scrollIntoView({ behavior: "smooth", block: "center" });
+      firstInvalid?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
       if ("focus" in (firstInvalid ?? {})) firstInvalid?.focus();
     }, 0);
   }
@@ -155,115 +179,202 @@ function CustomerFormPage() {
     const billing = values.billingAddress as Address;
     const shipping = values.shippingSameAsBilling
       ? billing
-      : ({ ...emptyAddress, ...values.shippingAddress } as Address);
+      : ({
+          ...emptyAddress,
+          ...values.shippingAddress,
+        } as Address);
 
     setSubmitting(true);
+
     try {
-      const result = await orderService.submitCustomerInformation(token, {
-        fullName: values.fullName,
-        email: values.email,
-        phone: values.phone,
-        legalBusinessName: values.legalBusinessName,
-        operatingName: values.operatingName,
-        poNumber: values.poNumber,
-        billingAddress: billing,
-        shippingAddress: shipping,
-        shippingSameAsBilling: values.shippingSameAsBilling,
-        confirmedAccurate: true,
-        confirmedAuthorized: true,
-        submittedAt: new Date().toISOString(),
+      const result = await orderService.submitCustomerInformation(
+        token,
+        {
+          fullName: values.fullName,
+          email: values.email,
+          phone: values.phone,
+          legalBusinessName: values.legalBusinessName,
+          operatingName: values.operatingName,
+          poNumber: values.poNumber,
+          billingAddress: billing,
+          shippingAddress: shipping,
+          shippingSameAsBilling: values.shippingSameAsBilling,
+          confirmedAccurate: true,
+          confirmedAuthorized: true,
+          submittedAt: new Date().toISOString(),
+        },
+      );
+
+      window.sessionStorage.setItem(
+        `invoice-ease-submission-${token}`,
+        JSON.stringify(result),
+      );
+      navigate({
+        to: "/customer/$token/success",
+        params: { token },
       });
-      window.sessionStorage.setItem(`invoice-ease-submission-${token}`, JSON.stringify(result));
-      navigate({ to: "/customer/$token/success", params: { token } });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Submission failed");
+      toast.error(
+        error instanceof Error ? error.message : "Submission failed",
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
+  const panelClass =
+    "rounded-xl border border-[#071226]/10 bg-[#FAF7F4] p-5 shadow-[0_1px_2px_rgba(7,18,38,0.04)]";
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#FAF7F4]">
       <CustomerHeader sellerName={sellerName || "Seller"} />
 
-      <main className="mx-auto w-full max-w-4xl space-y-6 px-4 py-8 sm:px-6">
-        <section className="space-y-1">
-          <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+      <main className="mx-auto w-full max-w-5xl space-y-7 px-4 py-9 sm:px-6">
+        <section className="rounded-xl bg-[#D5A125] px-6 py-7 text-[#071226]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#071226]/58">
+            Secure customer form
+          </p>
+          <h1 className="mt-3 text-[28px] font-semibold tracking-[-0.035em]">
             Confirm your billing information
           </h1>
-          <p className="text-sm text-muted-foreground">
-            Order {order.orderNumber} from {sellerName}. The order details below are final and cannot
-            be changed here.
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#071226]/68">
+            Order {order.orderNumber} from {sellerName}. The commercial
+            details below are final and cannot be changed from this form.
           </p>
         </section>
 
         <section className="space-y-3">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <Lock className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-            Your order (read-only)
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-[#071226]">
+            <Lock className="h-4 w-4" aria-hidden="true" />
+            Order summary
           </h2>
-          <LockedOrderItems items={order.items} currency={order.currency} />
-          <OrderSummary totals={totals} currency={order.currency} taxRate={order.taxRate} />
+          <LockedOrderItems
+            items={order.items}
+            currency={order.currency}
+          />
+          <OrderSummary
+            totals={totals}
+            currency={order.currency}
+            taxRate={order.taxRate}
+          />
         </section>
 
         {alreadySubmitted ? (
           <ErrorState
             title="Information already submitted"
-            description="We have received your billing details for this order. Your invoice is being prepared."
+            description="We have received the billing details for this order. The invoice is being prepared."
           />
         ) : (
-          <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit, onInvalid)} noValidate>
-            <fieldset className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-xs">
-              <legend className="text-sm font-semibold text-foreground">Contact details</legend>
-              <div className="grid gap-4 sm:grid-cols-2">
+          <form
+            className="space-y-6"
+            onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+            noValidate
+          >
+            <fieldset className={panelClass}>
+              <legend className="px-1 text-sm font-semibold text-[#071226]">
+                Contact details
+              </legend>
+              <div className="mt-2 grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="fullName">Contact person&apos;s full name</Label>
-                  <Input id="fullName" {...form.register("fullName")} />
+                  <Label htmlFor="fullName">
+                    Contact person&apos;s full name
+                  </Label>
+                  <Input
+                    id="fullName"
+                    {...form.register("fullName")}
+                  />
                   {errors.fullName ? (
-                    <p role="alert" className="text-sm text-destructive">{errors.fullName.message}</p>
+                    <p
+                      role="alert"
+                      className="text-sm text-destructive"
+                    >
+                      {errors.fullName.message}
+                    </p>
                   ) : null}
                 </div>
+
                 <div className="space-y-1.5">
                   <Label htmlFor="email">Email address</Label>
-                  <Input id="email" type="email" {...form.register("email")} />
+                  <Input
+                    id="email"
+                    type="email"
+                    {...form.register("email")}
+                  />
                   {errors.email ? (
-                    <p role="alert" className="text-sm text-destructive">{errors.email.message}</p>
+                    <p
+                      role="alert"
+                      className="text-sm text-destructive"
+                    >
+                      {errors.email.message}
+                    </p>
                   ) : null}
                 </div>
+
                 <div className="space-y-1.5">
                   <Label htmlFor="phone">Phone number</Label>
-                  <Input id="phone" type="tel" {...form.register("phone")} />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    {...form.register("phone")}
+                  />
                   {errors.phone ? (
-                    <p role="alert" className="text-sm text-destructive">{errors.phone.message}</p>
+                    <p
+                      role="alert"
+                      className="text-sm text-destructive"
+                    >
+                      {errors.phone.message}
+                    </p>
                   ) : null}
                 </div>
               </div>
             </fieldset>
 
-            <fieldset className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-xs">
-              <legend className="text-sm font-semibold text-foreground">Business details</legend>
-              <div className="grid gap-4 sm:grid-cols-2">
+            <fieldset className={panelClass}>
+              <legend className="px-1 text-sm font-semibold text-[#071226]">
+                Business details
+              </legend>
+              <div className="mt-2 grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <Label htmlFor="legalBusinessName">Legal business name</Label>
-                  <Input id="legalBusinessName" {...form.register("legalBusinessName")} />
+                  <Label htmlFor="legalBusinessName">
+                    Legal business name
+                  </Label>
+                  <Input
+                    id="legalBusinessName"
+                    {...form.register("legalBusinessName")}
+                  />
                   {errors.legalBusinessName ? (
-                    <p role="alert" className="text-sm text-destructive">
+                    <p
+                      role="alert"
+                      className="text-sm text-destructive"
+                    >
                       {errors.legalBusinessName.message}
                     </p>
                   ) : null}
                 </div>
+
                 <div className="space-y-1.5">
-                  <Label htmlFor="operatingName">Operating or pharmacy name (optional)</Label>
-                  <Input id="operatingName" {...form.register("operatingName")} />
+                  <Label htmlFor="operatingName">
+                    Operating or pharmacy name
+                  </Label>
+                  <Input
+                    id="operatingName"
+                    {...form.register("operatingName")}
+                  />
                 </div>
+
                 <div className="space-y-1.5">
-                  <Label htmlFor="poNumber">Purchase-order number (optional)</Label>
-                  <Input id="poNumber" {...form.register("poNumber")} />
+                  <Label htmlFor="poNumber">
+                    Purchase-order number
+                  </Label>
+                  <Input
+                    id="poNumber"
+                    {...form.register("poNumber")}
+                  />
                 </div>
               </div>
             </fieldset>
 
-            <div className="rounded-lg border border-border bg-card p-5 shadow-xs">
+            <div className={panelClass}>
               <AddressForm
                 name="billingAddress"
                 legend="Billing address"
@@ -272,28 +383,40 @@ function CustomerFormPage() {
               />
             </div>
 
-            <div className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-xs">
+            <div className={`${panelClass} space-y-4`}>
               <div className="flex items-center gap-2">
                 <Checkbox
                   id="shippingSameAsBilling"
                   checked={sameAsBilling}
                   onCheckedChange={(checked) => {
                     const isSame = checked === true;
-                    form.setValue("shippingSameAsBilling", isSame, {
-                      shouldDirty: true,
-                      shouldValidate: true,
-                    });
-                    if (isSame) {
-                      form.setValue("shippingAddress", undefined, {
+                    form.setValue(
+                      "shippingSameAsBilling",
+                      isSame,
+                      {
                         shouldDirty: true,
                         shouldValidate: true,
-                      });
+                      },
+                    );
+
+                    if (isSame) {
+                      form.setValue(
+                        "shippingAddress",
+                        undefined,
+                        {
+                          shouldDirty: true,
+                          shouldValidate: true,
+                        },
+                      );
                       form.clearErrors("shippingAddress");
                     }
                   }}
                 />
-                <Label htmlFor="shippingSameAsBilling">Shipping address same as billing address</Label>
+                <Label htmlFor="shippingSameAsBilling">
+                  Shipping address same as billing address
+                </Label>
               </div>
+
               {!sameAsBilling ? (
                 <AddressForm
                   name="shippingAddress"
@@ -304,55 +427,90 @@ function CustomerFormPage() {
               ) : null}
             </div>
 
-            <fieldset className="space-y-3 rounded-lg border border-border bg-card p-5 shadow-xs">
-              <legend className="text-sm font-semibold text-foreground">Confirmation</legend>
+            <fieldset className={`${panelClass} space-y-3`}>
+              <legend className="px-1 text-sm font-semibold text-[#071226]">
+                Confirmation
+              </legend>
+
               <div className="flex items-start gap-2">
                 <Checkbox
                   id="confirmedAccurate"
                   checked={form.watch("confirmedAccurate") === true}
                   onCheckedChange={(checked) =>
-                    form.setValue("confirmedAccurate", (checked === true) as true, {
-                      shouldDirty: true,
-                      shouldTouch: true,
-                      shouldValidate: true,
-                    })
+                    form.setValue(
+                      "confirmedAccurate",
+                      (checked === true) as true,
+                      {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                        shouldValidate: true,
+                      },
+                    )
                   }
                 />
-                <Label htmlFor="confirmedAccurate" className="text-sm font-normal leading-snug">
-                  I confirm the information provided above is accurate and complete.
+                <Label
+                  htmlFor="confirmedAccurate"
+                  className="text-sm font-normal leading-snug"
+                >
+                  I confirm the information provided above is accurate
+                  and complete.
                 </Label>
               </div>
+
               {errors.confirmedAccurate ? (
-                <p role="alert" className="text-sm text-destructive">
+                <p
+                  role="alert"
+                  className="text-sm text-destructive"
+                >
                   {errors.confirmedAccurate.message}
                 </p>
               ) : null}
+
               <div className="flex items-start gap-2">
                 <Checkbox
                   id="confirmedAuthorized"
                   checked={form.watch("confirmedAuthorized") === true}
                   onCheckedChange={(checked) =>
-                    form.setValue("confirmedAuthorized", (checked === true) as true, {
-                      shouldDirty: true,
-                      shouldTouch: true,
-                      shouldValidate: true,
-                    })
+                    form.setValue(
+                      "confirmedAuthorized",
+                      (checked === true) as true,
+                      {
+                        shouldDirty: true,
+                        shouldTouch: true,
+                        shouldValidate: true,
+                      },
+                    )
                   }
                 />
-                <Label htmlFor="confirmedAuthorized" className="text-sm font-normal leading-snug">
-                  I am authorized to provide billing information on behalf of this business.
+                <Label
+                  htmlFor="confirmedAuthorized"
+                  className="text-sm font-normal leading-snug"
+                >
+                  I am authorized to provide billing information on
+                  behalf of this business.
                 </Label>
               </div>
+
               {errors.confirmedAuthorized ? (
-                <p role="alert" className="text-sm text-destructive">
+                <p
+                  role="alert"
+                  className="text-sm text-destructive"
+                >
                   {errors.confirmedAuthorized.message}
                 </p>
               ) : null}
             </fieldset>
 
             <div className="flex justify-end">
-              <Button type="submit" size="lg" disabled={submitting}>
-                {submitting ? "Submitting…" : "Confirm Information and Generate Invoice"}
+              <Button
+                type="submit"
+                size="lg"
+                disabled={submitting}
+                className="min-w-[280px]"
+              >
+                {submitting
+                  ? "Submitting…"
+                  : "Confirm information and generate invoice"}
               </Button>
             </div>
           </form>

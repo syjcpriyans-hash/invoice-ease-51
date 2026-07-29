@@ -1,19 +1,18 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/lib/auth';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { APP_CONFIG } from '@/config/app';
-import { SiteLogo } from '@/components/site-logo';
-import { toast } from 'sonner';
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Check, LockKeyhole } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { SiteLogo } from "@/components/site-logo";
+import { toast } from "sonner";
 
-export const Route = createFileRoute('/login')({
+export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: `Team sign in — ${APP_CONFIG.name}` },
-      { name: 'robots', content: 'noindex, nofollow' },
+      { title: "Sign in | Billantra" },
+      { name: "robots", content: "noindex, nofollow" },
     ],
   }),
   component: LoginPage,
@@ -22,75 +21,128 @@ export const Route = createFileRoute('/login')({
 function LoginPage() {
   const navigate = useNavigate();
   const { user, loading, signIn } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) navigate({ to: '/dashboard', replace: true });
+    if (!loading && user) {
+      navigate({ to: "/dashboard", replace: true });
+    }
   }, [loading, navigate, user]);
 
   async function handleSignIn(event: React.FormEvent) {
     event.preventDefault();
     setSubmitting(true);
+
     try {
       await signIn(email, password);
-      navigate({ to: '/dashboard', replace: true });
+      navigate({ to: "/dashboard", replace: true });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Sign-in failed');
+      toast.error(
+        error instanceof Error ? error.message : "Sign-in failed",
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 px-4 py-10">
-      <div className="w-full max-w-md space-y-5">
-        <div className="flex items-center justify-center">
-          <SiteLogo imageClassName="h-12" />
+    <div className="grid min-h-screen bg-[#FAF7F4] lg:grid-cols-[0.92fr_1.08fr]">
+      <section className="hidden flex-col justify-between bg-[#071226] p-12 text-[#FAF7F4] lg:flex">
+        <SiteLogo inverse />
+
+        <div className="max-w-xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#D5A125]">
+            Billantra operations
+          </p>
+          <h1 className="mt-5 text-[42px] font-semibold leading-tight tracking-[-0.045em]">
+            One controlled workspace for every invoice after the sale.
+          </h1>
+
+          <div className="mt-9 space-y-4">
+            {[
+              "Collect complete customer information",
+              "Generate professional invoice PDFs",
+              "Track sent, delivered, bounced, and failed emails",
+            ].map((point) => (
+              <div
+                key={point}
+                className="flex items-center gap-3 text-sm text-[#FAF7F4]/68"
+              >
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#D5A125] text-[#071226]">
+                  <Check className="h-3.5 w-3.5" />
+                </span>
+                {point}
+              </div>
+            ))}
+          </div>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Team sign in</CardTitle>
-            <CardDescription>
-              This area is restricted to authorised Invoice Ease team members.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form className="space-y-5" onSubmit={handleSignIn}>
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label htmlFor="email">Email address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="password">Password</Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    required
-                  />
-                </div>
-              </div>
+        <p className="text-xs text-[#FAF7F4]/36">
+          Secure access to the Billantra workspace.
+        </p>
+      </section>
 
-              <Button className="w-full" disabled={submitting}>
-                {submitting ? 'Signing in…' : 'Sign in'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+      <section className="flex min-h-screen items-center justify-center px-5 py-12 sm:px-10">
+        <div className="w-full max-w-[440px]">
+          <div className="lg:hidden">
+            <SiteLogo />
+          </div>
+
+          <Link
+            to="/"
+            className="mt-8 inline-flex items-center gap-2 text-sm font-medium text-[#071226]/58 hover:text-[#071226] lg:mt-0"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Billantra
+          </Link>
+
+          <div className="mt-10">
+            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#D5A125] text-[#071226]">
+              <LockKeyhole className="h-5 w-5" />
+            </span>
+            <h1 className="mt-6 text-[32px] font-semibold tracking-[-0.04em] text-[#071226]">
+              Sign in to your workspace
+            </h1>
+            <p className="mt-2 text-sm leading-6 text-[#071226]/56">
+              Enter the credentials connected to your Billantra account.
+            </p>
+          </div>
+
+          <form className="mt-8 space-y-5" onSubmit={handleSignIn}>
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Email address</Label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                className="h-11"
+                required
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                className="h-11"
+                required
+              />
+            </div>
+
+            <Button className="h-11 w-full" disabled={submitting}>
+              {submitting ? "Signing in…" : "Sign in"}
+            </Button>
+          </form>
+        </div>
+      </section>
     </div>
   );
 }

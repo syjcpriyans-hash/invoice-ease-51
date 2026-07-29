@@ -6,8 +6,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-heading: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, ui-sans-serif, system-ui, sans-serif;
-  --font-data: "Inter", "SF Pro Text", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Poppins";
+  --font-data: "Poppins";
+
   --radius-sm: 5px;
   --radius-md: 7px;
   --radius-lg: 9px;
@@ -15,6 +16,7 @@
   --radius-2xl: 16px;
   --radius-3xl: 20px;
   --radius-4xl: 24px;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -60,78 +62,118 @@
 }
 
 :root {
-  --canvas: #f5f6f8;
-  --surface: #ffffff;
-  --ink: #09162b;
-  --slate: #667085;
-  --primary-accent: #09162b;
-  --positive: #157a55;
+  --brand-navy: #071226;
+  --brand-gold: #d5a125;
+  --brand-off-white: #faf7f4;
 
-  --background: #f5f6f8;
-  --foreground: #101828;
-  --card: #ffffff;
-  --card-foreground: #101828;
-  --popover: #ffffff;
-  --popover-foreground: #101828;
-  --primary: #09162b;
-  --primary-foreground: #ffffff;
-  --secondary: #f4f5f7;
-  --secondary-foreground: #344054;
-  --muted: #f2f4f7;
-  --muted-foreground: #667085;
-  --accent: #fff7de;
-  --accent-foreground: #6e5308;
-  --destructive: #c43d4f;
-  --destructive-foreground: #ffffff;
-  --border: #e3e6ea;
-  --input: #d7dce2;
-  --ring: #b48910;
-  --success: #157a55;
-  --success-foreground: #ffffff;
-  --warning: #a87508;
-  --warning-foreground: #ffffff;
-  --chart-1: #09162b;
-  --chart-2: #d7a927;
-  --chart-3: #157a55;
-  --chart-4: #667085;
-  --chart-5: #7b8aa2;
-  --sidebar: #09162b;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #d7a927;
-  --sidebar-primary-foreground: #09162b;
-  --sidebar-accent: rgba(255,255,255,0.08);
-  --sidebar-accent-foreground: #ffffff;
-  --sidebar-border: rgba(255,255,255,0.08);
-  --sidebar-ring: #d7a927;
+  --canvas: #faf7f4;
+  --surface: #faf7f4;
+  --ink: #071226;
+  --slate: rgba(7, 18, 38, 0.6);
+  --primary-accent: #d5a125;
+  --positive: #d5a125;
+
+  --background: #faf7f4;
+  --foreground: #071226;
+  --card: #faf7f4;
+  --card-foreground: #071226;
+  --popover: #faf7f4;
+  --popover-foreground: #071226;
+  --primary: #071226;
+  --primary-foreground: #faf7f4;
+  --secondary: rgba(213, 161, 37, 0.12);
+  --secondary-foreground: #071226;
+  --muted: rgba(7, 18, 38, 0.05);
+  --muted-foreground: rgba(7, 18, 38, 0.6);
+  --accent: rgba(213, 161, 37, 0.14);
+  --accent-foreground: #071226;
+  --destructive: #071226;
+  --destructive-foreground: #faf7f4;
+  --border: rgba(7, 18, 38, 0.12);
+  --input: rgba(7, 18, 38, 0.2);
+  --ring: #d5a125;
+  --success: #d5a125;
+  --success-foreground: #071226;
+  --warning: #d5a125;
+  --warning-foreground: #071226;
+  --chart-1: #071226;
+  --chart-2: #d5a125;
+  --chart-3: rgba(7, 18, 38, 0.72);
+  --chart-4: rgba(213, 161, 37, 0.64);
+  --chart-5: rgba(7, 18, 38, 0.38);
+  --sidebar: #071226;
+  --sidebar-foreground: #faf7f4;
+  --sidebar-primary: #d5a125;
+  --sidebar-primary-foreground: #071226;
+  --sidebar-accent: rgba(250, 247, 244, 0.08);
+  --sidebar-accent-foreground: #faf7f4;
+  --sidebar-border: rgba(250, 247, 244, 0.1);
+  --sidebar-ring: #d5a125;
 }
 
 @layer base {
-  * { border-color: var(--color-border); }
+  * {
+    border-color: var(--color-border);
+  }
 
-  html { scroll-behavior: smooth; }
+  html {
+    scroll-behavior: smooth;
+  }
 
   body {
     min-width: 320px;
-    background-color: var(--color-background);
-    color: var(--color-foreground);
-    font-family: var(--font-data);
+    background-color: #faf7f4;
+    color: #071226;
+    font-family: "Poppins";
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
   }
 
-  h1, h2, h3, h4, .font-heading {
-    font-family: var(--font-heading);
+  body *,
+  button,
+  input,
+  textarea,
+  select,
+  option {
+    font-family: "Poppins";
   }
 
-  button, a, input, select, textarea { outline: none; }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  .font-heading,
+  .font-data {
+    font-family: "Poppins";
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    outline: none;
+  }
+
+  input,
+  textarea,
+  select {
+    background-color: #faf7f4;
+    color: #071226;
+  }
 
   :focus-visible {
-    outline: 2px solid var(--color-ring);
+    outline: 2px solid #d5a125;
     outline-offset: 2px;
   }
 
-  ::selection { background: rgba(215, 169, 39, 0.25); }
+  ::selection {
+    background: rgba(213, 161, 37, 0.3);
+    color: #071226;
+  }
 }
 
 @layer components {
@@ -141,40 +183,34 @@
   }
 
   .font-data {
-    font-family: var(--font-data);
     font-variant-numeric: tabular-nums;
   }
 
-  .status-chip {
-    display: inline-flex;
-    align-items: center;
-    min-height: 24px;
-    border: 1px solid var(--color-border);
-    border-radius: 999px;
-    padding-inline: 9px;
-    font-size: 0.72rem;
-    line-height: 1;
-    font-weight: 600;
-  }
-
-  .status-chip-success {
-    color: var(--color-positive);
-    background: rgba(21, 122, 85, 0.07);
-    border-color: rgba(21, 122, 85, 0.2);
+  table tbody tr {
+    transition: background-color 140ms ease;
   }
 }
 
 @media (min-width: 768px) {
-  .marketing-container { width: min(100% - 56px, 1240px); }
+  .marketing-container {
+    width: min(100% - 56px, 1240px);
+  }
 }
 
 @media (min-width: 1024px) {
-  .marketing-container { width: min(100% - 80px, 1240px); }
+  .marketing-container {
+    width: min(100% - 80px, 1240px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

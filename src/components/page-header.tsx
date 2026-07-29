@@ -10,16 +10,24 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="flex flex-col gap-3 border-b border-border pb-5 sm:flex-row sm:items-start sm:justify-between">
-      <div className="space-y-1">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+    <header className="flex flex-col gap-4 border-b border-[#071226]/10 pb-6 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#D5A125]">
+          Billantra workspace
+        </p>
+        <h1 className="mt-2 text-[26px] font-semibold tracking-[-0.035em] text-[#071226] sm:text-[30px]">
           {title}
         </h1>
         {description ? (
-          <p className="max-w-2xl text-sm text-muted-foreground">{description}</p>
+          <p className="mt-1.5 max-w-3xl text-sm leading-6 text-[#071226]/60">
+            {description}
+          </p>
         ) : null}
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+
+      {actions ? (
+        <div className="flex flex-wrap items-center gap-2">{actions}</div>
+      ) : null}
     </header>
   );
 }
