@@ -36,6 +36,7 @@ export const Route = createFileRoute("/invoices")({
 function InvoicesPage() {
   const [invoices, setInvoices] = useState<Invoice[] | null>(null);
   const [retryingInvoiceId, setRetryingInvoiceId] = useState<string | null>(null);
+  const [savingEmailInvoiceId, setSavingEmailInvoiceId] = useState<string | null>(null);
 
   async function loadInvoices() {
     const data = await invoiceService.list();
@@ -65,6 +66,33 @@ function InvoicesPage() {
       await invoiceService.downloadPdf(invoice);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not download invoice PDF");
+    }
+  }
+
+  async function editCustomerEmail(invoice: Invoice) {
+    const enteredEmail = window.prompt(
+      "Enter the corrected customer email address:",
+      invoice.customerEmail,
+    );
+
+    if (enteredEmail === null) return;
+
+    const email = enteredEmail.trim().toLowerCase();
+    if (!email) {
+      toast.error("Customer email is required.");
+      return;
+    }
+
+    setSavingEmailInvoiceId(invoice.id);
+
+    try {
+      await invoiceService.updateCustomerEmail(invoice.orderId, email);
+      await loadInvoices();
+      toast.success("Customer email updated. You can retry the invoice now.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update customer email.");
+    } finally {
+      setSavingEmailInvoiceId(null);
     }
   }
 
@@ -104,7 +132,7 @@ function InvoicesPage() {
           />
         ) : (
           <div className="overflow-x-auto rounded-lg border border-border bg-card">
-            <table className="w-full min-w-[900px] text-sm">
+            <table className="w-full min-w-[980px] text-sm">
               <caption className="sr-only">Invoice history</caption>
               <thead className="bg-muted/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
@@ -134,10 +162,12 @@ function InvoicesPage() {
 
               <tbody className="divide-y divide-border">
                 {invoices.map((invoice) => {
-                  const canRetry =
+                  const canRecover =
                     invoice.emailStatus === "failed" ||
                     invoice.emailStatus === "bounced";
                   const isRetrying = retryingInvoiceId === invoice.id;
+                  const isSavingEmail = savingEmailInvoiceId === invoice.id;
+                  const actionInProgress = isRetrying || isSavingEmail;
 
                   return (
                     <tr key={invoice.id}>
@@ -148,7 +178,8 @@ function InvoicesPage() {
                         {invoice.orderNumber}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">
-                        {invoice.customerName}
+                        <div>{invoice.customerName}</div>
+                        <div className="text-xs">{invoice.customerEmail}</div>
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums text-foreground">
                         {formatCurrency(invoice.amount, invoice.currency)}
@@ -184,9 +215,23 @@ function InvoicesPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            disabled={!canRetry || isRetrying}
+                            disabled={!canRecover || actionInProgress}
                             title={
-                              canRetry
+                              canRecover
+                                ? "Correct the customer email address"
+                                : "Email editing is available for failed or bounced invoices"
+                            }
+                            onClick={() => editCustomerEmail(invoice)}
+                          >
+                            {isSavingEmail ? "Saving…" : "Edit Email"}
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            disabled={!canRecover || actionInProgress}
+                            title={
+                              canRecover
                                 ? "Retry sending this invoice email"
                                 : "Retry is available only for failed or bounced emails"
                             }

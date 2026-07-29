@@ -2,6 +2,12 @@ import type { Invoice } from "@/types";
 import { supabase } from "@/lib/supabase";
 import { mapInvoice } from "./mappers";
 
+async function getAccessToken(message: string): Promise<string> {
+  const { data, error } = await supabase.auth.getSession();
+  if (error || !data.session) throw new Error(message);
+  return data.session.access_token;
+}
+
 export const invoiceService = {
   async list(): Promise<Invoice[]> {
     const { data, error } = await supabase
@@ -13,11 +19,10 @@ export const invoiceService = {
   },
 
   async downloadPdf(invoice: Invoice): Promise<void> {
-    const { data, error } = await supabase.auth.getSession();
-    if (error || !data.session) throw new Error("Please sign in to download invoices.");
+    const accessToken = await getAccessToken("Please sign in to download invoices.");
 
     const response = await fetch(`/api/invoices/${invoice.id}/download`, {
-      headers: { Authorization: `Bearer ${data.session.access_token}` },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
     if (!response.ok) {
       throw new Error((await response.text()) || "Could not download the invoice PDF.");
@@ -34,13 +39,37 @@ export const invoiceService = {
     URL.revokeObjectURL(url);
   },
 
-  async processOrder(orderId: string): Promise<{ invoiceNumber: string; emailStatus: "sent" | "failed"; error?: string }> {
-    const { data, error } = await supabase.auth.getSession();
-    if (error || !data.session) throw new Error("Please sign in to process invoices.");
+  async updateCustomerEmail(orderId: string, email: string): Promise<void> {
+    const accessToken = await getAccessToken("Please sign in to update customer information.");
+
+    const response = await fetch(`/api/orders/${orderId}/customer-email`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const payload = (await response.json().catch(() => ({}))) as {
+      error?: string;
+    };
+
+    if (!response.ok) {
+      throw new Error(payload.error || "Could not update customer email.");
+    }
+  },
+
+  async processOrder(orderId: string): Promise<{
+    invoiceNumber: string;
+    emailStatus: "sent" | "failed";
+    error?: string;
+  }> {
+    const accessToken = await getAccessToken("Please sign in to process invoices.");
 
     const response = await fetch(`/api/orders/${orderId}/process-invoice`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${data.session.access_token}` },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
     const payload = (await response.json().catch(() => ({}))) as {
       invoiceNumber?: string;
@@ -56,5 +85,4 @@ export const invoiceService = {
       error: payload.error,
     };
   },
-
 };
