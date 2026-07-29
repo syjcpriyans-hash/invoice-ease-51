@@ -1,10 +1,10 @@
 export const APP_CONFIG = {
-  name: 'Invoice Ease',
+  name: 'Billantra',
   description:
-    'Turn confirmed orders into invoice-ready workflows with one customer link.',
+    'Automated invoice operations for businesses that confirm orders outside an online checkout.',
   defaultCurrency: 'USD',
   defaultTaxRate: 8.25,
-  waitlistCta: 'Join the waitlist',
+  waitlistCta: 'Request early access',
 } as const;
 
 export const CURRENCIES = ['USD', 'CAD', 'EUR', 'GBP'] as const;

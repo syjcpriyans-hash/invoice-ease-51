@@ -1,500 +1,361 @@
-import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import {
   ArrowRight,
   Check,
-  ChevronRight,
-  CircleCheck,
-  FileCheck2,
-  KeyRound,
+  CheckCircle2,
+  FileText,
   LockKeyhole,
   MailCheck,
-  ReceiptText,
+  Receipt,
   ShieldCheck,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import { APP_CONFIG } from '@/config/app';
-import { SiteLogo } from '@/components/site-logo';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { waitlistService } from '@/services/waitlistService';
+  Sparkles,
+} from "lucide-react";
+import { toast } from "sonner";
+import { APP_CONFIG } from "@/config/app";
+import { SiteLogo } from "@/components/site-logo";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { waitlistService } from "@/services/waitlistService";
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: `${APP_CONFIG.name} — Automated intake-to-invoice` },
+      { title: "Billantra | Automated invoice operations for modern businesses" },
       {
-        name: 'description',
+        name: "description",
         content:
-          'Turn a confirmed order into a delivered invoice with one secure customer link and no manual re-entry.',
+          "Billantra turns confirmed orders into professional invoices. Collect customer details securely, generate PDFs automatically, track delivery, and eliminate repetitive invoice administration.",
       },
-      { property: 'og:title', content: `${APP_CONFIG.name} — Automated intake-to-invoice` },
       {
-        property: 'og:description',
+        name: "keywords",
         content:
-          'Collect customer billing details, generate the invoice, and send it automatically.',
+          "invoice automation, automated invoicing, B2B invoice software, invoice workflow, customer billing form, invoice email automation",
       },
+      { property: "og:title", content: "Billantra | From confirmed order to delivered invoice" },
+      {
+        property: "og:description",
+        content:
+          "A controlled invoice workflow for wholesalers, distributors, suppliers, and operations teams.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
   component: LandingPage,
 });
 
-const workflowRows = [
-  {
-    label: 'Order confirmed',
-    detail: 'Locked pricing and line items',
-    state: 'Complete',
-    icon: FileCheck2,
-  },
-  {
-    label: 'Customer details collected',
-    detail: 'Secure form submitted',
-    state: 'Complete',
-    icon: KeyRound,
-  },
-  {
-    label: 'Invoice delivered',
-    detail: 'PDF generated and emailed',
-    state: 'Delivered',
-    icon: MailCheck,
-  },
+const proof = [
+  "Secure customer intake",
+  "Automatic PDF generation",
+  "Delivery and bounce visibility",
 ];
 
 function LandingPage() {
-  const [fullName, setFullName] = useState('');
-  const [companyName, setCompanyName] = useState('');
-  const [role, setRole] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  async function handleWaitlistSubmit(event: React.FormEvent) {
+  async function joinWaitlist(event: React.FormEvent) {
     event.preventDefault();
-
     if (!email.trim()) {
-      toast.error('Enter your work email to join the waitlist.');
+      toast.error("Enter your work email.");
       return;
     }
 
     setSubmitting(true);
     try {
-      const result = await waitlistService.join({ email, fullName, companyName, role });
+      const result = await waitlistService.join({
+        email,
+        fullName: "",
+        companyName: "",
+        role: "",
+      });
       toast.success(
-        result.status === 'already_joined'
-          ? "You're already on the waitlist."
-          : 'You are on the waitlist. We will contact you when early access opens.',
+        result.status === "already_joined"
+          ? "You are already registered."
+          : "Your early-access request has been received.",
       );
-      setFullName('');
-      setCompanyName('');
-      setRole('');
-      setEmail('');
+      setEmail("");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Could not join the waitlist.');
+      toast.error(error instanceof Error ? error.message : "Could not submit your request.");
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="landing-page min-h-screen bg-background text-foreground">
-      <a
-        href="#main-content"
-        className="sr-only fixed left-4 top-4 z-50 rounded-md bg-primary px-4 py-2 text-primary-foreground focus:not-sr-only"
-      >
-        Skip to content
-      </a>
-
-      <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur-md">
-        <div className="marketing-container flex h-16 items-center justify-between">
+    <div className="min-h-screen bg-white text-[#0b172a]">
+      <header className="sticky top-0 z-40 border-b border-[#e9eaec] bg-white/95 backdrop-blur">
+        <div className="marketing-container flex h-[72px] items-center">
           <SiteLogo />
-          <nav className="hidden items-center gap-7 text-sm font-medium text-muted-foreground md:flex" aria-label="Primary navigation">
-            <a className="landing-nav-link" href="#workflow">Workflow</a>
-            <a className="landing-nav-link" href="#controls">Controls</a>
-            <a className="landing-nav-link" href="#waitlist">Early access</a>
+          <nav className="ml-12 hidden items-center gap-8 text-sm font-medium text-slate-600 lg:flex">
+            <a href="#product" className="hover:text-[#0b172a]">Product</a>
+            <a href="#workflow" className="hover:text-[#0b172a]">Workflow</a>
+            <a href="#security" className="hover:text-[#0b172a]">Security</a>
+            <a href="#industries" className="hover:text-[#0b172a]">Industries</a>
           </nav>
-          <Button asChild size="sm" className="h-10 rounded-md px-4">
-            <a href="#waitlist">Join waitlist</a>
-          </Button>
+          <div className="ml-auto flex items-center gap-3">
+            <Button asChild variant="ghost" className="hidden sm:inline-flex">
+              <Link to="/login">Sign in</Link>
+            </Button>
+            <Button asChild className="rounded-lg bg-[#0b172a] px-4 hover:bg-[#162843]">
+              <a href="#early-access">Request early access</a>
+            </Button>
+          </div>
         </div>
       </header>
 
-      <main id="main-content">
-        <section className="border-b border-border/80">
-          <div className="marketing-container grid gap-14 py-20 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:py-28">
-            <div className="landing-reveal max-w-3xl">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-slate">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
-                Early access opening soon
+      <main>
+        <section className="overflow-hidden border-b border-[#eceef0]">
+          <div className="marketing-container grid min-h-[720px] items-center gap-16 py-20 lg:grid-cols-[1.03fr_0.97fr] lg:py-24">
+            <div className="max-w-[680px]">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#eadfac] bg-[#fffaf0] px-3 py-1.5 text-xs font-semibold text-[#8b6a0b]">
+                <Sparkles className="h-3.5 w-3.5" />
+                Built for high-volume invoice operations
               </div>
-              <h1 className="font-heading text-[42px] font-semibold leading-[1.08] tracking-[-0.045em] text-balance sm:text-[52px] lg:text-[60px]">
-                From confirmed order to delivered invoice—without the handoffs.
+              <h1 className="mt-7 text-[46px] font-semibold leading-[1.04] tracking-[-0.055em] text-[#09162b] sm:text-[58px] lg:text-[68px]">
+                The operating system for invoices after the sale.
               </h1>
-              <p className="mt-6 max-w-2xl text-[18px] leading-8 text-muted-foreground">
-                Invoice Ease collects customer billing details through one secure link, creates the invoice, and sends it automatically. Your team enters the order once. The workflow finishes itself.
+              <p className="mt-7 max-w-[610px] text-[18px] leading-8 text-slate-600">
+                Billantra turns a confirmed order into a delivered invoice without repetitive data entry. Your customer submits their details once. Billantra handles the document, delivery, and status tracking.
               </p>
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Button asChild size="lg" className="h-11 rounded-md px-5">
-                  <a href="#waitlist">
-                    Join the early-access waitlist
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                <Button asChild size="lg" className="h-12 rounded-lg bg-[#09162b] px-6 hover:bg-[#162843]">
+                  <a href="#early-access">
+                    Request early access
+                    <ArrowRight className="h-4 w-4" />
                   </a>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="h-11 rounded-md px-5">
-                  <a href="#workflow">See the workflow</a>
+                <Button asChild variant="outline" size="lg" className="h-12 rounded-lg border-[#d8dce1] px-6">
+                  <a href="#workflow">See how it works</a>
                 </Button>
               </div>
-              <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted-foreground" aria-label="Product trust signals">
-                <TrustLine>Private customer links</TrustLine>
-                <TrustLine>Server-side totals</TrustLine>
-                <TrustLine>Auditable invoice records</TrustLine>
+              <div className="mt-9 flex flex-wrap gap-x-6 gap-y-3">
+                {proof.map((item) => (
+                  <span key={item} className="flex items-center gap-2 text-sm text-slate-500">
+                    <Check className="h-4 w-4 text-[#b48910]" />
+                    {item}
+                  </span>
+                ))}
               </div>
             </div>
 
-            <div className="landing-reveal landing-reveal-delay relative">
-              <div className="absolute -inset-8 -z-10 bg-[radial-gradient(circle_at_center,rgba(49,89,216,0.10),transparent_68%)]" aria-hidden="true" />
-              <div className="overflow-hidden rounded-lg border border-border bg-surface shadow-[0_18px_55px_rgba(20,32,51,0.08)]">
-                <div className="flex items-center justify-between border-b border-border px-5 py-4">
-                  <div>
-                    <p className="text-sm font-semibold">Order ORD-2048</p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">Northstar Pharmacy</p>
+            <div className="relative">
+              <div className="absolute -inset-20 -z-10 bg-[radial-gradient(circle,rgba(215,169,39,0.16),transparent_62%)]" />
+              <div className="overflow-hidden rounded-2xl border border-[#dfe3e8] bg-white shadow-[0_30px_90px_rgba(9,22,43,0.13)]">
+                <div className="flex items-center justify-between border-b border-[#edf0f2] bg-[#fafbfc] px-5 py-4">
+                  <div className="flex items-center gap-3">
+                    <img src="/brand/billantra-mark.png" alt="" className="h-8 w-8 object-contain" />
+                    <div>
+                      <p className="text-sm font-semibold text-[#101828]">Invoice workspace</p>
+                      <p className="text-xs text-slate-400">Live operations overview</p>
+                    </div>
                   </div>
-                  <span className="status-chip status-chip-success">Completed</span>
+                  <span className="rounded-full border border-[#cce8dc] bg-[#f0fbf6] px-2.5 py-1 text-[11px] font-semibold text-[#147a55]">
+                    All systems active
+                  </span>
                 </div>
 
-                <div className="px-5 py-2">
-                  {workflowRows.map((row, index) => (
-                    <div key={row.label} className="ledger-row group relative grid grid-cols-[36px_1fr_auto] items-center gap-3 py-4">
-                      <span className="ledger-marker" aria-hidden="true" />
-                      <span className="flex h-8 w-8 items-center justify-center rounded-md bg-secondary text-primary">
-                        <row.icon className="h-4 w-4" aria-hidden="true" />
-                      </span>
-                      <div>
-                        <p className="text-sm font-medium">{row.label}</p>
-                        <p className="mt-0.5 text-xs text-muted-foreground">{row.detail}</p>
-                      </div>
-                      <span className="text-xs font-medium text-positive">{row.state}</span>
-                      {index < workflowRows.length - 1 ? (
-                        <span className="absolute bottom-[-1px] left-0 right-0 h-px bg-border" aria-hidden="true" />
-                      ) : null}
+                <div className="grid grid-cols-3 border-b border-[#edf0f2]">
+                  {[
+                    ["Orders", "128"],
+                    ["Delivered", "119"],
+                    ["Attention", "3"],
+                  ].map(([label, value]) => (
+                    <div key={label} className="border-r border-[#edf0f2] px-5 py-5 last:border-r-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-400">{label}</p>
+                      <p className="mt-2 text-2xl font-semibold tracking-[-0.03em]">{value}</p>
                     </div>
                   ))}
                 </div>
 
-                <div className="border-t border-border bg-canvas px-5 py-4">
-                  <div className="grid grid-cols-2 gap-6 text-sm">
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Invoice</p>
-                      <p className="mt-1 font-data font-medium tabular-nums">INV-1042</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs font-medium uppercase tracking-[0.08em] text-muted-foreground">Total</p>
-                      <p className="mt-1 font-data text-lg font-semibold tabular-nums">$5,311.00</p>
-                    </div>
+                <div className="p-5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <p className="text-sm font-semibold">Recent activity</p>
+                    <span className="text-xs text-slate-400">Today</span>
                   </div>
+                  {[
+                    ["ORD-2026-0128", "Northstar Pharmacy", "$5,311.00", "Delivered"],
+                    ["ORD-2026-0127", "Apex Medical Group", "$2,480.00", "Submitted"],
+                    ["ORD-2026-0126", "Harbour Health", "$8,920.00", "Awaiting"],
+                    ["ORD-2026-0125", "Medline Partners", "$1,760.00", "Delivered"],
+                  ].map(([order, customer, value, status]) => (
+                    <div key={order} className="grid grid-cols-[1fr_auto] items-center gap-4 border-b border-[#edf0f2] py-4 last:border-0">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-medium">{order}</p>
+                          <span className="text-[11px] text-slate-400">{status}</span>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-400">{customer}</p>
+                      </div>
+                      <p className="text-sm font-semibold tabular-nums">{value}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <section id="workflow" className="border-b border-border/80 bg-surface">
-          <div className="marketing-container py-20 lg:py-24">
-            <SectionIntro
-              eyebrow="One controlled workflow"
-              title="Remove the re-entry, follow-up, and file handling."
-              description="The workflow is designed around the exact moment after an order is confirmed—when teams usually start copying details between email, forms, invoicing software, and customer messages."
-            />
-
-            <div className="mt-12 border-y border-border">
-              <WorkflowStep
-                number="01"
-                title="Create the confirmed order"
-                description="Lock the products, quantities, prices, tax, and payment terms before anything reaches the customer."
-                outcome="One source of truth"
-              />
-              <WorkflowStep
-                number="02"
-                title="Collect verified customer details"
-                description="The customer receives a private link and submits billing, shipping, and contact information in a structured form."
-                outcome="No email chasing"
-              />
-              <WorkflowStep
-                number="03"
-                title="Generate and deliver the invoice"
-                description="Invoice numbering, PDF generation, storage, and email delivery run automatically after a valid submission."
-                outcome="No manual handoff"
-              />
-            </div>
-          </div>
-        </section>
-
-        <section id="controls" className="border-b border-border/80">
-          <div className="marketing-container grid gap-14 py-20 lg:grid-cols-[0.82fr_1.18fr] lg:py-24">
-            <SectionIntro
-              eyebrow="Built for billing operations"
-              title="Automation with financial controls—not shortcuts."
-              description="Fast is useful only when the amounts, recipients, and records remain correct. Invoice Ease keeps customer input separate from locked commercial terms and records every workflow state."
-            />
-
-            <div className="border-t border-border">
-              <ControlRow
-                icon={LockKeyhole}
-                title="Locked commercial terms"
-                description="Customers can provide their details, but cannot alter products, pricing, discounts, tax, or payment terms."
-              />
-              <ControlRow
-                icon={ShieldCheck}
-                title="Server-side validation"
-                description="Totals and required fields are recalculated and validated before an invoice can be created."
-              />
-              <ControlRow
-                icon={ReceiptText}
-                title="Consistent invoice records"
-                description="Invoice numbers, PDFs, order references, and delivery states remain connected in one auditable record."
-              />
-              <ControlRow
-                icon={MailCheck}
-                title="Delivery visibility"
-                description="Link and invoice email states are visible to the team, with retry paths when an exception occurs."
-              />
-            </div>
-          </div>
-        </section>
-
-        <section className="border-b border-border/80 bg-ink text-white">
-          <div className="marketing-container grid gap-10 py-16 lg:grid-cols-[1fr_auto] lg:items-center">
-            <div className="max-w-3xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-white/60">Designed for repeat B2B invoicing</p>
-              <h2 className="mt-4 font-heading text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
-                Built for teams where two minutes per invoice becomes hours every month.
+        <section id="product" className="border-b border-[#eceef0] bg-[#f7f8fa]">
+          <div className="marketing-container py-24">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#a67d0b]">One controlled platform</p>
+              <h2 className="mt-4 text-[38px] font-semibold leading-tight tracking-[-0.045em]">
+                Built for the work that starts after an order is confirmed.
               </h2>
-              <p className="mt-4 max-w-2xl text-base leading-7 text-white/70">
-                Wholesalers, distributors, equipment suppliers, and operations teams can keep the flexibility of confirmed-order sales without carrying the administrative work into every invoice.
+              <p className="mt-5 text-base leading-7 text-slate-600">
+                Replace scattered emails, copied customer details, downloaded files, and manual invoice follow-ups with one auditable workflow.
               </p>
             </div>
-            <Button asChild size="lg" variant="secondary" className="h-11 justify-self-start rounded-md px-5 text-foreground lg:justify-self-end">
-              <a href="#waitlist">Request early access</a>
-            </Button>
+            <div className="mt-12 grid gap-5 md:grid-cols-3">
+              <Feature icon={Receipt} title="Structured order intake" text="Lock products, quantities, prices, taxes, discounts, and payment terms before customer handoff." />
+              <Feature icon={LockKeyhole} title="Secure customer collection" text="Send one private form for legal name, contact information, billing address, and shipping details." />
+              <Feature icon={MailCheck} title="Automated delivery" text="Generate the invoice PDF, send it automatically, and track sent, delivered, bounced, and failed states." />
+            </div>
           </div>
         </section>
 
-        <section id="waitlist" className="border-b border-border/80 bg-surface">
-          <div className="marketing-container grid gap-14 py-20 lg:grid-cols-[0.82fr_1.18fr] lg:py-24">
-            <div className="max-w-xl">
-              <p className="section-eyebrow">Early access</p>
-              <h2 className="mt-4 font-heading text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">
-                Join the teams shaping the first release.
-              </h2>
-              <p className="mt-5 text-base leading-7 text-muted-foreground">
-                Tell us where invoice preparation slows your team down. Early users will receive launch updates and may be invited into a guided pilot.
-              </p>
-              <div className="mt-8 border-t border-border pt-6">
-                <p className="text-sm font-medium">Good fit for:</p>
-                <ul className="mt-4 space-y-3 text-sm text-muted-foreground">
-                  <WaitlistFit>Teams creating many B2B invoices each day</WaitlistFit>
-                  <WaitlistFit>Orders confirmed outside an online checkout</WaitlistFit>
-                  <WaitlistFit>Businesses collecting billing details by email</WaitlistFit>
-                </ul>
+        <section id="workflow" className="border-b border-[#eceef0]">
+          <div className="marketing-container py-24">
+            <div className="grid gap-16 lg:grid-cols-[0.8fr_1.2fr]">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#a67d0b]">The Billantra workflow</p>
+                <h2 className="mt-4 text-[38px] font-semibold leading-tight tracking-[-0.045em]">
+                  Fewer handoffs. Fewer mistakes. Faster invoicing.
+                </h2>
+              </div>
+              <div className="border-t border-[#dfe3e8]">
+                <Step number="01" title="Confirm the commercial terms" text="Enter or import the order and review the locked financial details." />
+                <Step number="02" title="Collect verified customer information" text="The customer completes a structured form through a private link." />
+                <Step number="03" title="Generate and deliver automatically" text="Billantra creates the PDF, sends the email, and records delivery status." />
+                <Step number="04" title="Resolve exceptions without rebuilding" text="Correct failed email addresses and retry the existing invoice safely." />
               </div>
             </div>
+          </div>
+        </section>
 
-            <form className="rounded-lg border border-border bg-background p-6 sm:p-8" onSubmit={handleWaitlistSubmit}>
-              <div className="grid gap-5 sm:grid-cols-2">
-                <Field label="Full name" htmlFor="fullName">
-                  <Input
-                    id="fullName"
-                    value={fullName}
-                    onChange={(event) => setFullName(event.target.value)}
-                    placeholder="Priyans Kevadia"
-                    className="h-10 rounded-md bg-surface"
-                  />
-                </Field>
-                <Field label="Company name" htmlFor="companyName">
-                  <Input
-                    id="companyName"
-                    value={companyName}
-                    onChange={(event) => setCompanyName(event.target.value)}
-                    placeholder="Company name"
-                    className="h-10 rounded-md bg-surface"
-                  />
-                </Field>
-                <Field label="Work email" htmlFor="email">
-                  <Input
-                    id="email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="you@company.com"
-                    className="h-10 rounded-md bg-surface"
-                  />
-                </Field>
-                <Field label="Your role" htmlFor="role">
-                  <Input
-                    id="role"
-                    value={role}
-                    onChange={(event) => setRole(event.target.value)}
-                    placeholder="Operations, sales, finance"
-                    className="h-10 rounded-md bg-surface"
-                  />
-                </Field>
-              </div>
-              <div className="mt-6 flex flex-col gap-4 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
-                <p className="max-w-md text-xs leading-5 text-muted-foreground">
-                  We will use your information only for Invoice Ease launch and early-access communication.
+        <section id="security" className="bg-[#09162b] text-white">
+          <div className="marketing-container grid gap-12 py-24 lg:grid-cols-[1fr_1.1fr]">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#d7a927]">Operational confidence</p>
+              <h2 className="mt-4 text-[38px] font-semibold leading-tight tracking-[-0.045em]">
+                Automation designed around control, not shortcuts.
+              </h2>
+              <p className="mt-5 max-w-xl text-base leading-7 text-slate-400">
+                Customer-submitted data stays separate from locked pricing. Totals are calculated server-side. Every invoice remains tied to its order and delivery record.
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <DarkFeature icon={ShieldCheck} title="Server-side validation" />
+              <DarkFeature icon={LockKeyhole} title="Locked commercial terms" />
+              <DarkFeature icon={FileText} title="Connected invoice records" />
+              <DarkFeature icon={CheckCircle2} title="Delivery-state tracking" />
+            </div>
+          </div>
+        </section>
+
+        <section id="industries" className="border-b border-[#eceef0]">
+          <div className="marketing-container py-24">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#a67d0b]">Designed for B2B operations</p>
+              <h2 className="mt-4 text-[38px] font-semibold tracking-[-0.045em]">
+                Serious infrastructure for businesses that invoice repeatedly.
+              </h2>
+            </div>
+            <div className="mt-12 grid divide-y divide-[#e3e6ea] border-y border-[#e3e6ea] md:grid-cols-2 md:divide-x md:divide-y-0">
+              <Industry title="Wholesalers and distributors" text="Move confirmed sales into invoicing without rebuilding customer and order information." />
+              <Industry title="Medical and equipment suppliers" text="Collect complete billing details and maintain consistent invoice documentation." />
+              <Industry title="Service and installation teams" text="Combine products, services, taxes, and shipping in one controlled record." />
+              <Industry title="Operations and finance teams" text="Give staff one workflow for invoice preparation, delivery, and exception handling." />
+            </div>
+          </div>
+        </section>
+
+        <section id="early-access" className="bg-[#f7f8fa]">
+          <div className="marketing-container py-24">
+            <div className="rounded-2xl border border-[#dfe3e8] bg-white px-6 py-12 shadow-[0_16px_50px_rgba(9,22,43,0.06)] sm:px-12 lg:flex lg:items-center lg:justify-between">
+              <div className="max-w-2xl">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#a67d0b]">Early access</p>
+                <h2 className="mt-4 text-[36px] font-semibold tracking-[-0.045em]">
+                  Build a faster invoice operation with Billantra.
+                </h2>
+                <p className="mt-4 text-base leading-7 text-slate-600">
+                  Join the early-access list for product updates and pilot availability.
                 </p>
-                <Button className="h-11 shrink-0 rounded-md px-5" disabled={submitting}>
-                  {submitting ? 'Joining…' : 'Join waitlist'}
-                  {!submitting ? <ArrowRight className="h-4 w-4" aria-hidden="true" /> : null}
-                </Button>
               </div>
-            </form>
-          </div>
-        </section>
-
-        <section className="bg-background">
-          <div className="marketing-container py-20 lg:py-24">
-            <SectionIntro
-              eyebrow="Questions"
-              title="What early users should know."
-              description="The first release is focused on one job: completing the confirmed-order-to-invoice workflow with less manual intervention."
-            />
-            <div className="mt-10 grid border-t border-border md:grid-cols-2">
-              <FaqItem question="Is the product live today?">
-                The working MVP is in controlled testing. The public site is collecting early-access interest while reliability and production controls are completed.
-              </FaqItem>
-              <FaqItem question="Can customers change an order?">
-                No. Commercial terms remain locked. Customers provide only the billing, shipping, contact, and authorization information required for invoicing.
-              </FaqItem>
-              <FaqItem question="Does the customer need an account?">
-                No. The customer receives a secure, order-specific link and can submit the required information without creating a login.
-              </FaqItem>
-              <FaqItem question="Who can access the dashboard?">
-                Only authenticated team users. The public website and customer forms do not expose operational dashboard data.
-              </FaqItem>
+              <form onSubmit={joinWaitlist} className="mt-8 flex w-full max-w-md flex-col gap-3 sm:flex-row lg:mt-0">
+                <Input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="Work email address"
+                  className="h-12 rounded-lg"
+                />
+                <Button type="submit" disabled={submitting} className="h-12 shrink-0 rounded-lg bg-[#09162b] px-5">
+                  {submitting ? "Submitting…" : "Request access"}
+                </Button>
+              </form>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="border-t border-border bg-surface">
-        <div className="marketing-container flex flex-col gap-5 py-8 sm:flex-row sm:items-center sm:justify-between">
+      <footer className="border-t border-[#e6e8eb] bg-white">
+        <div className="marketing-container flex flex-col gap-6 py-10 sm:flex-row sm:items-center">
           <SiteLogo />
-          <p className="text-sm text-muted-foreground">© {new Date().getFullYear()} Invoice Ease. Automated intake-to-invoice.</p>
+          <p className="text-sm text-slate-400 sm:ml-6">
+            Automated invoice operations for modern businesses.
+          </p>
+          <div className="flex gap-6 text-sm text-slate-500 sm:ml-auto">
+            <Link to="/login">Sign in</Link>
+            <a href="#security">Security</a>
+            <a href="#early-access">Early access</a>
+          </div>
         </div>
       </footer>
     </div>
   );
 }
 
-function TrustLine({ children }: { children: React.ReactNode }) {
+function Feature({ icon: Icon, title, text }: { icon: typeof Receipt; title: string; text: string }) {
   return (
-    <span className="inline-flex items-center gap-2">
-      <CircleCheck className="h-4 w-4 text-positive" aria-hidden="true" />
-      {children}
-    </span>
-  );
-}
-
-function SectionIntro({
-  eyebrow,
-  title,
-  description,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="max-w-2xl">
-      <p className="section-eyebrow">{eyebrow}</p>
-      <h2 className="mt-4 font-heading text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">{title}</h2>
-      <p className="mt-5 text-base leading-7 text-muted-foreground">{description}</p>
-    </div>
-  );
-}
-
-function WorkflowStep({
-  number,
-  title,
-  description,
-  outcome,
-}: {
-  number: string;
-  title: string;
-  description: string;
-  outcome: string;
-}) {
-  return (
-    <div className="ledger-row group relative grid gap-5 border-b border-border py-7 last:border-b-0 md:grid-cols-[64px_1fr_220px] md:items-center">
-      <span className="ledger-marker" aria-hidden="true" />
-      <span className="font-data text-xs font-semibold tracking-[0.08em] text-muted-foreground">{number}</span>
-      <div>
-        <h3 className="font-heading text-lg font-semibold tracking-[-0.015em]">{title}</h3>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>
-      </div>
-      <div className="flex items-center justify-between text-sm font-medium md:justify-end md:gap-3">
-        <span>{outcome}</span>
-        <ChevronRight className="h-4 w-4 text-primary" aria-hidden="true" />
-      </div>
-    </div>
-  );
-}
-
-function ControlRow({
-  icon: Icon,
-  title,
-  description,
-}: {
-  icon: typeof ShieldCheck;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="ledger-row group relative grid grid-cols-[40px_1fr] gap-4 border-b border-border py-6 last:border-b-0">
-      <span className="ledger-marker" aria-hidden="true" />
-      <span className="flex h-9 w-9 items-center justify-center rounded-md bg-secondary text-primary">
-        <Icon className="h-4 w-4" aria-hidden="true" />
+    <article className="rounded-xl border border-[#e1e4e8] bg-white p-6">
+      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#fff7de] text-[#9b760c]">
+        <Icon className="h-5 w-5" strokeWidth={1.8} />
       </span>
+      <h3 className="mt-6 text-lg font-semibold tracking-[-0.02em]">{title}</h3>
+      <p className="mt-3 text-sm leading-6 text-slate-500">{text}</p>
+    </article>
+  );
+}
+
+function Step({ number, title, text }: { number: string; title: string; text: string }) {
+  return (
+    <div className="grid gap-4 border-b border-[#dfe3e8] py-7 sm:grid-cols-[72px_1fr]">
+      <span className="text-sm font-semibold text-[#b48910]">{number}</span>
       <div>
-        <h3 className="text-sm font-semibold">{title}</h3>
-        <p className="mt-1.5 text-sm leading-6 text-muted-foreground">{description}</p>
+        <h3 className="text-lg font-semibold tracking-[-0.02em]">{title}</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-500">{text}</p>
       </div>
     </div>
   );
 }
 
-function WaitlistFit({ children }: { children: React.ReactNode }) {
+function DarkFeature({ icon: Icon, title }: { icon: typeof ShieldCheck; title: string }) {
   return (
-    <li className="flex items-start gap-3">
-      <Check className="mt-0.5 h-4 w-4 shrink-0 text-positive" aria-hidden="true" />
-      <span>{children}</span>
-    </li>
-  );
-}
-
-function Field({
-  label,
-  htmlFor,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-2">
-      <Label htmlFor={htmlFor} className="text-sm font-semibold">{label}</Label>
-      {children}
+    <div className="rounded-xl border border-white/[0.1] bg-white/[0.04] p-5">
+      <Icon className="h-5 w-5 text-[#d7a927]" strokeWidth={1.8} />
+      <p className="mt-5 text-sm font-medium text-white">{title}</p>
     </div>
   );
 }
 
-function FaqItem({ question, children }: { question: string; children: React.ReactNode }) {
+function Industry({ title, text }: { title: string; text: string }) {
   return (
-    <div className="faq-item border-b border-border py-7 md:min-h-44 md:px-8">
-      <h3 className="text-sm font-semibold">{question}</h3>
-      <p className="mt-3 text-sm leading-6 text-muted-foreground">{children}</p>
-    </div>
+    <article className="p-7 md:p-9">
+      <h3 className="text-lg font-semibold tracking-[-0.02em]">{title}</h3>
+      <p className="mt-3 max-w-md text-sm leading-6 text-slate-500">{text}</p>
+    </article>
   );
 }
