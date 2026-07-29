@@ -124,12 +124,16 @@ async function sendInvoiceEmail(args: {
     </div>
   `;
 
+  const idempotencyKey = args.invoice.email_provider_id
+    ? `invoice-${args.invoice.id}-retry-${args.invoice.email_provider_id}`
+    : `invoice-${args.invoice.id}-initial-send`;
+
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'Idempotency-Key': `invoice-${args.invoice.id}-initial-send`,
+      'Idempotency-Key': idempotencyKey,
     },
     body: JSON.stringify({
       from,
