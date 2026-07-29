@@ -45,7 +45,10 @@ export const Route = createFileRoute('/api/customer-submit')({
 
           if (orderError) throw orderError;
           if (!order || new Date(order.token_expires_at).getTime() <= Date.now()) {
-            return Response.json({ error: 'This customer link is invalid or expired.' }, { status: 404 });
+            return Response.json(
+              { error: 'This customer link is invalid or expired.' },
+              { status: 404 },
+            );
           }
 
           const existingInfo = Array.isArray(order.customer_information)
@@ -54,36 +57,61 @@ export const Route = createFileRoute('/api/customer-submit')({
 
           if (!existingInfo) {
             const info = payload.information;
-            const { error: submitError } = await admin.rpc('submit_public_customer_information', {
-              p_token: payload.token,
-              p_full_name: info.fullName,
-              p_email: info.email,
-              p_phone: info.phone,
-              p_legal_business_name: info.legalBusinessName,
-              p_operating_name: info.operatingName ?? '',
-              p_po_number: info.poNumber ?? '',
-              p_billing_address: info.billingAddress,
-              p_shipping_address: info.shippingAddress,
-              p_shipping_same_as_billing: info.shippingSameAsBilling,
-              p_confirmed_accurate: true,
-              p_confirmed_authorized: true,
-            });
+            const { error: submitError } = await admin.rpc(
+              'submit_public_customer_information',
+              {
+                p_token: payload.token,
+                p_full_name: info.fullName,
+                p_email: info.email,
+                p_phone: info.phone,
+                p_legal_business_name: info.legalBusinessName,
+                p_operating_name: info.operatingName ?? '',
+                p_po_number: info.poNumber ?? '',
+                p_billing_address: info.billingAddress,
+                p_shipping_address: info.shippingAddress,
+                p_shipping_same_as_billing: info.shippingSameAsBilling,
+                p_confirmed_accurate: true,
+                p_confirmed_authorized: true,
+              },
+            );
             if (submitError) throw submitError;
           }
 
-          const automation = await processInvoiceForOrder(order.id);
+          try {
+            const automation = await processInvoiceForOrder(order.id);
 
-          return Response.json({
-            success: true,
-            orderId: order.id,
-            invoiceId: automation.invoiceId,
-            invoiceNumber: automation.invoiceNumber,
-            emailStatus: automation.emailStatus,
-            automationError: automation.error ?? null,
-          });
+            return Response.json({
+              success: true,
+              orderId: order.id,
+              invoiceId: automation.invoiceId,
+              invoiceNumber: automation.invoiceNumber,
+              emailStatus: automation.emailStatus,
+              automationError: automation.error ?? null,
+            });
+          } catch (automationError) {
+            const message =
+              automationError instanceof Error
+                ? automationError.message
+                : 'Invoice automation could not be completed.';
+
+            console.error(
+              'Customer information was saved, but invoice automation failed',
+              automationError,
+            );
+
+            return Response.json({
+              success: true,
+              orderId: order.id,
+              emailStatus: 'failed',
+              automationError: message,
+            });
+          }
         } catch (error) {
           console.error('Customer submission failed', error);
-          const message = error instanceof Error ? error.message : 'Could not submit customer information.';
+          const message =
+            error instanceof Error
+              ? error.message
+              : 'Could not submit customer information.';
           return Response.json({ error: message }, { status: 400 });
         }
       },
