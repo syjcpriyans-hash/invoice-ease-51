@@ -1,10 +1,17 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  useNavigate,
+} from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader } from "@/components/page-header";
-import { OrderItemsEditor, createEmptyItem } from "@/components/order-items-editor";
+import {
+  OrderItemsEditor,
+  createEmptyItem,
+} from "@/components/order-items-editor";
 import { OrderSummary } from "@/components/order-summary";
 import { CopyLinkButton } from "@/components/copy-link-button";
 import { Button } from "@/components/ui/button";
@@ -26,7 +33,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { createOrderSchema, orderItemSchema, type CreateOrderValues } from "@/lib/schemas";
+import {
+  createOrderSchema,
+  orderItemSchema,
+  type CreateOrderValues,
+} from "@/lib/schemas";
 import { calculateTotals, customerUrl } from "@/lib/format";
 import { parseOrderEmail } from "@/lib/order-email-parser";
 import { orderService } from "@/services/orderService";
@@ -39,15 +50,11 @@ import { RequireAuth } from "@/lib/auth";
 export const Route = createFileRoute("/orders/new")({
   head: () => ({
     meta: [
-      { title: "Create Order — InvoiceFlow" },
+      { title: "Create order | Billantra" },
       {
         name: "description",
-        content: "Build a locked order with line items, discounts and tax, then generate a customer link.",
-      },
-      { property: "og:title", content: "Create Order — InvoiceFlow" },
-      {
-        property: "og:description",
-        content: "Build a locked order and generate a secure customer information link.",
+        content:
+          "Create a locked order and send a secure customer information link.",
       },
     ],
   }),
@@ -60,9 +67,12 @@ export const Route = createFileRoute("/orders/new")({
 
 function CreateOrderPage() {
   const navigate = useNavigate();
-  const [items, setItems] = useState<OrderItem[]>([createEmptyItem()]);
-  const [itemsError, setItemsError] = useState<string | undefined>();
-  const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
+  const [items, setItems] = useState<OrderItem[]>([
+    createEmptyItem(),
+  ]);
+  const [itemsError, setItemsError] = useState<string>();
+  const [createdOrder, setCreatedOrder] =
+    useState<Order | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [orderEmailText, setOrderEmailText] = useState("");
 
@@ -83,9 +93,14 @@ function CreateOrderPage() {
 
   useEffect(() => {
     let active = true;
-    Promise.all([settingsService.get(), orderService.suggestOrderNumber()])
+
+    Promise.all([
+      settingsService.get(),
+      orderService.suggestOrderNumber(),
+    ])
       .then(([settings, orderNumber]) => {
         if (!active) return;
+
         form.reset({
           ...form.getValues(),
           orderNumber,
@@ -95,8 +110,13 @@ function CreateOrderPage() {
         });
       })
       .catch((error) => {
-        toast.error(error instanceof Error ? error.message : "Could not load order defaults");
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Could not load order defaults",
+        );
       });
+
     return () => {
       active = false;
     };
@@ -104,6 +124,7 @@ function CreateOrderPage() {
   }, []);
 
   const watched = form.watch();
+
   const totals = useMemo(
     () =>
       calculateTotals({
@@ -113,7 +134,13 @@ function CreateOrderPage() {
         taxRate: Number(watched.taxRate) || 0,
         shipping: Number(watched.shipping) || 0,
       }),
-    [items, watched.discountType, watched.discountValue, watched.taxRate, watched.shipping],
+    [
+      items,
+      watched.discountType,
+      watched.discountValue,
+      watched.taxRate,
+      watched.shipping,
+    ],
   );
 
   function importOrderEmail() {
@@ -136,7 +163,10 @@ function CreateOrderPage() {
       imported += 1;
     }
 
-    if (parsed.currency && CURRENCIES.includes(parsed.currency)) {
+    if (
+      parsed.currency &&
+      CURRENCIES.includes(parsed.currency)
+    ) {
       form.setValue("currency", parsed.currency, {
         shouldDirty: true,
         shouldValidate: true,
@@ -144,7 +174,11 @@ function CreateOrderPage() {
       imported += 1;
     }
 
-    if (parsed.dueInDays !== undefined && parsed.dueInDays >= 1 && parsed.dueInDays <= 365) {
+    if (
+      parsed.dueInDays !== undefined &&
+      parsed.dueInDays >= 1 &&
+      parsed.dueInDays <= 365
+    ) {
       form.setValue("dueInDays", parsed.dueInDays, {
         shouldDirty: true,
         shouldValidate: true,
@@ -160,7 +194,10 @@ function CreateOrderPage() {
       imported += 1;
     }
 
-    if (parsed.discountType && parsed.discountValue !== undefined) {
+    if (
+      parsed.discountType &&
+      parsed.discountValue !== undefined
+    ) {
       form.setValue("discountType", parsed.discountType, {
         shouldDirty: true,
         shouldValidate: true,
@@ -172,7 +209,11 @@ function CreateOrderPage() {
       imported += 1;
     }
 
-    if (parsed.taxRate !== undefined && parsed.taxRate >= 0 && parsed.taxRate <= 100) {
+    if (
+      parsed.taxRate !== undefined &&
+      parsed.taxRate >= 0 &&
+      parsed.taxRate <= 100
+    ) {
       form.setValue("taxRate", parsed.taxRate, {
         shouldDirty: true,
         shouldValidate: true,
@@ -180,7 +221,10 @@ function CreateOrderPage() {
       imported += 1;
     }
 
-    if (parsed.shipping !== undefined && parsed.shipping >= 0) {
+    if (
+      parsed.shipping !== undefined &&
+      parsed.shipping >= 0
+    ) {
       form.setValue("shipping", parsed.shipping, {
         shouldDirty: true,
         shouldValidate: true,
@@ -204,25 +248,34 @@ function CreateOrderPage() {
     }
 
     if (imported === 0) {
-      toast.error("No order details were detected. Check the email format and try again.");
+      toast.error(
+        "No order details were detected. Check the email format and try again.",
+      );
       return;
     }
 
-    toast.success("Order details imported. Review every field before creating the order.");
+    toast.success(
+      "Order details imported. Review every field before creating the order.",
+    );
   }
 
-  function validateItems(values: CreateOrderValues): boolean {
+  function validateItems(values: CreateOrderValues) {
     if (items.length === 0) {
       setItemsError("Add at least one line item.");
       return false;
     }
+
     for (const item of items) {
       const parsed = orderItemSchema.safeParse(item);
       if (!parsed.success) {
-        setItemsError(parsed.error.issues[0]?.message ?? "Check the line items.");
+        setItemsError(
+          parsed.error.issues[0]?.message ??
+            "Check the line items.",
+        );
         return false;
       }
     }
+
     const subtotal = calculateTotals({
       items,
       discountType: values.discountType,
@@ -230,21 +283,26 @@ function CreateOrderPage() {
       taxRate: 0,
       shipping: 0,
     }).subtotal;
+
     const rawDiscount =
       values.discountType === "percentage"
         ? (subtotal * values.discountValue) / 100
         : values.discountValue;
+
     if (rawDiscount > subtotal) {
       setItemsError("Discount cannot exceed the subtotal.");
       return false;
     }
+
     setItemsError(undefined);
     return true;
   }
 
   async function onSubmit(values: CreateOrderValues) {
     if (!validateItems(values)) return;
+
     setSubmitting(true);
+
     try {
       const order = await orderService.create({
         orderNumber: values.orderNumber,
@@ -262,15 +320,25 @@ function CreateOrderPage() {
       setCreatedOrder(order);
 
       try {
-        const delivery = await orderService.sendCustomerLink(order.id);
+        const delivery =
+          await orderService.sendCustomerLink(order.id);
         setCreatedOrder(delivery.order ?? order);
+
         if (delivery.emailStatus === "sent") {
-          toast.success(`Customer link emailed to ${order.customerEmail}`);
+          toast.success(
+            `Customer link emailed to ${order.customerEmail}`,
+          );
         } else {
-          toast.error(delivery.error || "The order was created, but the customer-link email failed.");
+          toast.error(
+            delivery.error ||
+              "The order was created, but the customer-link email failed.",
+          );
         }
       } catch (emailError) {
-        const refreshed = await orderService.getById(order.id).catch(() => undefined);
+        const refreshed = await orderService
+          .getById(order.id)
+          .catch(() => undefined);
+
         setCreatedOrder(refreshed ?? order);
         toast.error(
           emailError instanceof Error
@@ -279,203 +347,278 @@ function CreateOrderPage() {
         );
       }
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not create the order");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not create the order",
+      );
     } finally {
       setSubmitting(false);
     }
   }
 
   const errors = form.formState.errors;
-  const link = createdOrder ? customerUrl(createdOrder.token) : "";
+  const link = createdOrder
+    ? customerUrl(createdOrder.token)
+    : "";
+
+  const panel =
+    "rounded-md border border-[#071226]/10 bg-[#FAF7F4]";
 
   return (
     <AppShell>
-      <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)} noValidate>
+      <form
+        className="space-y-4"
+        onSubmit={form.handleSubmit(onSubmit)}
+        noValidate
+      >
         <PageHeader
           title="Create order"
-          description="Paste an order email or enter the details manually."
-          actions={
-            <Button type="submit" size="sm" disabled={submitting}>
-              {submitting ? "Creating and emailing…" : "Create Order and Email Link"}
-            </Button>
-          }
+          description="Enter the order manually or import details from an email."
         />
 
-        <section className="space-y-3 rounded-lg border border-border bg-card p-5 shadow-xs">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-sm font-semibold text-foreground">Import order email</h2>
-              <p className="text-sm text-muted-foreground">
-                Paste the customer order or confirmation email, then review the imported fields.
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={!orderEmailText.trim()}
-              onClick={importOrderEmail}
-            >
-              Auto-Fill Order
-            </Button>
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_310px]">
+          <div className="space-y-4">
+            <section className={panel}>
+              <div className="border-b border-[#071226]/10 px-4 py-3">
+                <h2 className="text-[13px] font-semibold text-[#071226]">
+                  Order details
+                </h2>
+              </div>
+              <div className="grid gap-3 p-4 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <Label htmlFor="orderNumber">Order number</Label>
+                  <Input
+                    id="orderNumber"
+                    {...form.register("orderNumber")}
+                  />
+                  {errors.orderNumber ? (
+                    <p className="text-xs text-[#071226]">
+                      {errors.orderNumber.message}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="customerEmail">
+                    Customer email
+                  </Label>
+                  <Input
+                    id="customerEmail"
+                    type="email"
+                    {...form.register("customerEmail")}
+                  />
+                  {errors.customerEmail ? (
+                    <p className="text-xs text-[#071226]">
+                      {errors.customerEmail.message}
+                    </p>
+                  ) : null}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select
+                    value={watched.currency}
+                    onValueChange={(value) =>
+                      form.setValue("currency", value, {
+                        shouldValidate: true,
+                      })
+                    }
+                  >
+                    <SelectTrigger id="currency">
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CURRENCIES.map((currency) => (
+                        <SelectItem
+                          key={currency}
+                          value={currency}
+                        >
+                          {currency}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="dueInDays">
+                    Invoice due in
+                  </Label>
+                  <Input
+                    id="dueInDays"
+                    type="number"
+                    min={1}
+                    {...form.register("dueInDays", {
+                      valueAsNumber: true,
+                    })}
+                  />
+                </div>
+
+                <div className="space-y-1 sm:col-span-2">
+                  <Label htmlFor="internalNotes">
+                    Internal notes
+                  </Label>
+                  <Textarea
+                    id="internalNotes"
+                    rows={3}
+                    {...form.register("internalNotes")}
+                  />
+                </div>
+              </div>
+            </section>
+
+            <OrderItemsEditor
+              items={items}
+              currency={watched.currency}
+              onChange={setItems}
+              error={itemsError}
+            />
+
+            <section className={panel}>
+              <div className="border-b border-[#071226]/10 px-4 py-3">
+                <h2 className="text-[13px] font-semibold text-[#071226]">
+                  Pricing adjustments
+                </h2>
+              </div>
+              <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="space-y-1">
+                  <Label htmlFor="discountType">
+                    Discount type
+                  </Label>
+                  <Select
+                    value={watched.discountType}
+                    onValueChange={(value) =>
+                      form.setValue(
+                        "discountType",
+                        value as CreateOrderValues["discountType"],
+                        { shouldValidate: true },
+                      )
+                    }
+                  >
+                    <SelectTrigger id="discountType">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="fixed">
+                        Fixed amount
+                      </SelectItem>
+                      <SelectItem value="percentage">
+                        Percentage
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="discountValue">
+                    Discount value
+                  </Label>
+                  <Input
+                    id="discountValue"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    {...form.register("discountValue", {
+                      valueAsNumber: true,
+                    })}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="taxRate">Tax rate (%)</Label>
+                  <Input
+                    id="taxRate"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step="0.01"
+                    {...form.register("taxRate", {
+                      valueAsNumber: true,
+                    })}
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="shipping">
+                    Shipping charge
+                  </Label>
+                  <Input
+                    id="shipping"
+                    type="number"
+                    min={0}
+                    step="0.01"
+                    {...form.register("shipping", {
+                      valueAsNumber: true,
+                    })}
+                  />
+                </div>
+              </div>
+            </section>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="orderEmailText">Order email text</Label>
-            <Textarea
-              id="orderEmailText"
-              rows={8}
-              value={orderEmailText}
-              onChange={(event) => setOrderEmailText(event.target.value)}
-              placeholder={`Order Number: PO-1048
+          <aside className="space-y-3 xl:sticky xl:top-[72px] xl:self-start">
+            <section className={panel}>
+              <div className="flex items-center justify-between border-b border-[#071226]/10 px-3 py-2.5">
+                <div>
+                  <h2 className="text-[12px] font-semibold text-[#071226]">
+                    Import email
+                  </h2>
+                  <p className="text-[10px] text-[#071226]/45">
+                    Paste and auto-fill
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={!orderEmailText.trim()}
+                  onClick={importOrderEmail}
+                >
+                  Auto-fill
+                </Button>
+              </div>
+              <div className="p-3">
+                <Textarea
+                  id="orderEmailText"
+                  rows={9}
+                  value={orderEmailText}
+                  onChange={(event) =>
+                    setOrderEmailText(event.target.value)
+                  }
+                  placeholder={`Order Number: PO-1048
 Customer Email: customer@example.com
 Currency: CAD
 Net 30
+
 2 x Pharmacy Refrigerator @ 2499.00
-1 x Installation Service @ 350.00
 HST: 13%
 Shipping: 125.00`}
+                />
+              </div>
+            </section>
+
+            <OrderSummary
+              totals={totals}
+              currency={watched.currency}
+              taxRate={Number(watched.taxRate) || 0}
             />
-          </div>
-        </section>
 
-        <section className="grid gap-4 rounded-lg border border-border bg-card p-5 shadow-xs sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="orderNumber">Order number</Label>
-            <Input id="orderNumber" {...form.register("orderNumber")} />
-            {errors.orderNumber ? (
-              <p role="alert" className="text-sm text-destructive">{errors.orderNumber.message}</p>
-            ) : null}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="customerEmail">Customer email</Label>
-            <Input id="customerEmail" type="email" {...form.register("customerEmail")} />
-            {errors.customerEmail ? (
-              <p role="alert" className="text-sm text-destructive">{errors.customerEmail.message}</p>
-            ) : null}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="currency">Currency</Label>
-            <Select
-              value={watched.currency}
-              onValueChange={(v) => form.setValue("currency", v, { shouldValidate: true })}
-            >
-              <SelectTrigger id="currency">
-                <SelectValue placeholder="Select currency" />
-              </SelectTrigger>
-              <SelectContent>
-                {CURRENCIES.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="dueInDays">Invoice due in (days)</Label>
-            <Input
-              id="dueInDays"
-              type="number"
-              min={1}
-              {...form.register("dueInDays", { valueAsNumber: true })}
-            />
-            {errors.dueInDays ? (
-              <p role="alert" className="text-sm text-destructive">{errors.dueInDays.message}</p>
-            ) : null}
-          </div>
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="internalNotes">Internal notes</Label>
-            <Textarea id="internalNotes" rows={3} {...form.register("internalNotes")} />
-          </div>
-        </section>
-
-        <OrderItemsEditor
-          items={items}
-          currency={watched.currency}
-          onChange={setItems}
-          error={itemsError}
-        />
-
-        <div className="grid gap-6 lg:grid-cols-2">
-          <section className="grid gap-4 rounded-lg border border-border bg-card p-5 shadow-xs sm:grid-cols-2">
-            <h2 className="text-sm font-semibold text-foreground sm:col-span-2">
-              Discounts, tax and shipping
-            </h2>
-            <div className="space-y-1.5">
-              <Label htmlFor="discountType">Discount type</Label>
-              <Select
-                value={watched.discountType}
-                onValueChange={(v) =>
-                  form.setValue("discountType", v as CreateOrderValues["discountType"], {
-                    shouldValidate: true,
-                  })
-                }
+            <div className="grid gap-2">
+              <Button type="submit" disabled={submitting}>
+                {submitting
+                  ? "Creating and emailing…"
+                  : "Create order and email link"}
+              </Button>
+              <Button
+                asChild
+                type="button"
+                variant="outline"
               >
-                <SelectTrigger id="discountType">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fixed">Fixed amount</SelectItem>
-                  <SelectItem value="percentage">Percentage</SelectItem>
-                </SelectContent>
-              </Select>
+                <Link to="/orders">Cancel</Link>
+              </Button>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="discountValue">Discount value</Label>
-              <Input
-                id="discountValue"
-                type="number"
-                min={0}
-                step="0.01"
-                {...form.register("discountValue", { valueAsNumber: true })}
-              />
-              {errors.discountValue ? (
-                <p role="alert" className="text-sm text-destructive">{errors.discountValue.message}</p>
-              ) : null}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="taxRate">Tax rate (%)</Label>
-              <Input
-                id="taxRate"
-                type="number"
-                min={0}
-                max={100}
-                step="0.01"
-                {...form.register("taxRate", { valueAsNumber: true })}
-              />
-              {errors.taxRate ? (
-                <p role="alert" className="text-sm text-destructive">{errors.taxRate.message}</p>
-              ) : null}
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="shipping">Shipping charge</Label>
-              <Input
-                id="shipping"
-                type="number"
-                min={0}
-                step="0.01"
-                {...form.register("shipping", { valueAsNumber: true })}
-              />
-              {errors.shipping ? (
-                <p role="alert" className="text-sm text-destructive">{errors.shipping.message}</p>
-              ) : null}
-            </div>
-          </section>
-
-          <OrderSummary
-            totals={totals}
-            currency={watched.currency}
-            taxRate={Number(watched.taxRate) || 0}
-          />
-        </div>
-
-        <div className="flex justify-end gap-2">
-          <Button asChild type="button" variant="outline">
-            <Link to="/orders">Cancel</Link>
-          </Button>
-          <Button type="submit" disabled={submitting}>
-            {submitting ? "Creating and emailing…" : "Create Order and Email Link"}
-          </Button>
+          </aside>
         </div>
       </form>
 
@@ -485,7 +628,10 @@ Shipping: 125.00`}
           if (!open && createdOrder) {
             const id = createdOrder.id;
             setCreatedOrder(null);
-            navigate({ to: "/orders/$id", params: { id } });
+            navigate({
+              to: "/orders/$id",
+              params: { id },
+            });
           }
         }}
       >
@@ -499,18 +645,28 @@ Shipping: 125.00`}
             <DialogDescription>
               {createdOrder?.customerLinkEmailStatus === "sent"
                 ? `The secure billing-information link was automatically emailed to ${createdOrder.customerEmail}.`
-                : `The order was saved, but the automatic email was not confirmed. You can use the fallback link below or retry from the order page.`}
+                : "The order was saved, but the automatic email was not confirmed. Use the fallback link or retry from the order page."}
             </DialogDescription>
           </DialogHeader>
-          <div className="rounded-md border border-border bg-muted/50 px-3 py-2">
-            <p className="break-all text-sm text-foreground">{link}</p>
+          <div className="rounded-md border border-[#071226]/12 bg-[#071226]/4 px-3 py-2">
+            <p className="break-all text-xs text-[#071226]">
+              {link}
+            </p>
           </div>
           <DialogFooter className="gap-2 sm:justify-start">
-            <CopyLinkButton value={link} label="Copy Link" size="default" />
+            <CopyLinkButton
+              value={link}
+              label="Copy link"
+              size="default"
+            />
             {createdOrder ? (
-              <Button asChild size="default">
-                <Link to="/customer/$token" params={{ token: createdOrder.token }} target="_blank">
-                  Open Customer Form
+              <Button asChild>
+                <Link
+                  to="/customer/$token"
+                  params={{ token: createdOrder.token }}
+                  target="_blank"
+                >
+                  Open customer form
                 </Link>
               </Button>
             ) : null}

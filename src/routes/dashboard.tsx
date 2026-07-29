@@ -7,7 +7,6 @@ import {
   FileText,
   MailCheck,
   Plus,
-  Receipt,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { StatusBadge } from "@/components/status-badge";
@@ -42,35 +41,26 @@ export const Route = createFileRoute("/dashboard")({
   ),
 });
 
-function MetricCard({
+function Metric({
   label,
   value,
-  helper,
   icon: Icon,
 }: {
   label: string;
   value: number;
-  helper: string;
-  icon: typeof Receipt;
+  icon: typeof Clock3;
 }) {
   return (
-    <div className="rounded-xl border border-[#071226]/10 bg-[#FAF7F4] p-5 shadow-[0_1px_2px_rgba(7,18,38,0.04)]">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-[13px] font-medium text-[#071226]/56">
-            {label}
-          </p>
-          <p className="mt-2 text-[28px] font-semibold tracking-[-0.035em] text-[#071226] tabular-nums">
-            {value}
-          </p>
-        </div>
-
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-[#D5A125]/35 bg-[#D5A125]/10 text-[#071226]">
-          <Icon className="h-[17px] w-[17px]" strokeWidth={1.8} />
-        </span>
+    <div className="flex min-w-0 items-center justify-between gap-3 px-4 py-3">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#071226]/42">
+          {label}
+        </p>
+        <p className="mt-1 text-[24px] font-semibold tracking-[-0.035em] text-[#071226] tabular-nums">
+          {value}
+        </p>
       </div>
-
-      <p className="mt-4 text-xs text-[#071226]/42">{helper}</p>
+      <Icon className="h-4 w-4 text-[#D5A125]" />
     </div>
   );
 }
@@ -113,14 +103,12 @@ function DashboardPage() {
         "form_opened",
       ].includes(order.status),
     ).length ?? 0;
-
   const submitted =
     orders?.filter((order) => !!order.customerInformation).length ?? 0;
   const generated = invoices.length;
   const delivered = invoices.filter(
     (invoice) => invoice.emailStatus === "delivered",
   ).length;
-
   const totalValue =
     orders?.reduce(
       (sum, order) => sum + orderTotals(order).total,
@@ -130,135 +118,117 @@ function DashboardPage() {
 
   return (
     <AppShell>
-      <div className="space-y-7">
-        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+      <div className="space-y-4">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#D5A125]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D5A125]">
               Operations overview
             </p>
-            <h1 className="mt-2 text-[30px] font-semibold tracking-[-0.04em] text-[#071226]">
-              Your invoice workflow
+            <h1 className="mt-1.5 text-[25px] font-semibold tracking-[-0.04em] text-[#071226]">
+              Invoice workflow
             </h1>
-            <p className="mt-1.5 text-sm text-[#071226]/56">
-              Monitor customer intake, invoice generation, and email delivery.
+            <p className="mt-1 text-[13px] text-[#071226]/54">
+              Customer intake, invoice generation, and delivery status.
             </p>
           </div>
-
-          <Button asChild className="h-10 rounded-lg px-4">
+          <Button asChild size="sm">
             <Link to="/orders/new">
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3.5 w-3.5" />
               Create order
             </Link>
           </Button>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            label="Awaiting customer"
-            value={awaiting}
-            helper="Orders still requiring action"
-            icon={Clock3}
-          />
-          <MetricCard
-            label="Forms submitted"
-            value={submitted}
-            helper="Customer details received"
-            icon={CheckCircle2}
-          />
-          <MetricCard
-            label="Invoices generated"
-            value={generated}
-            helper="Invoice records created"
-            icon={FileText}
-          />
-          <MetricCard
+        <div className="grid overflow-hidden rounded-md border border-[#071226]/10 bg-[#FAF7F4] sm:grid-cols-2 xl:grid-cols-4">
+          <div className="border-b border-[#071226]/10 sm:border-r xl:border-b-0">
+            <Metric label="Awaiting customer" value={awaiting} icon={Clock3} />
+          </div>
+          <div className="border-b border-[#071226]/10 xl:border-b-0 xl:border-r">
+            <Metric
+              label="Forms submitted"
+              value={submitted}
+              icon={CheckCircle2}
+            />
+          </div>
+          <div className="border-b border-[#071226]/10 sm:border-r sm:border-b-0">
+            <Metric
+              label="Invoices generated"
+              value={generated}
+              icon={FileText}
+            />
+          </div>
+          <Metric
             label="Emails delivered"
             value={delivered}
-            helper="Confirmed by the email provider"
             icon={MailCheck}
           />
         </div>
 
-        <div className="grid gap-5 xl:grid-cols-[1fr_320px]">
-          <section className="overflow-hidden rounded-xl border border-[#071226]/10 bg-[#FAF7F4] shadow-[0_1px_2px_rgba(7,18,38,0.04)]">
-            <div className="flex items-center justify-between border-b border-[#071226]/10 px-5 py-4">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+          <section className="overflow-hidden rounded-md border border-[#071226]/10 bg-[#FAF7F4]">
+            <div className="flex items-center justify-between border-b border-[#071226]/10 px-4 py-3">
               <div>
-                <h2 className="text-[15px] font-semibold text-[#071226]">
+                <h2 className="text-[13px] font-semibold text-[#071226]">
                   Recent orders
                 </h2>
-                <p className="mt-0.5 text-xs text-[#071226]/42">
-                  Latest activity across your workspace
+                <p className="text-[11px] text-[#071226]/45">
+                  Latest workspace activity
                 </p>
               </div>
-
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="text-[#071226]"
-              >
+              <Button asChild variant="ghost" size="sm">
                 <Link to="/orders">
                   View all
-                  <ArrowUpRight className="h-4 w-4" />
+                  <ArrowUpRight className="h-3.5 w-3.5" />
                 </Link>
               </Button>
             </div>
 
             {orders === null ? (
-              <div className="p-6">
+              <div className="p-4">
                 <LoadingState label="Loading orders…" />
               </div>
             ) : orders.length === 0 ? (
-              <div className="p-6">
+              <div className="p-4">
                 <EmptyState
                   title="No orders yet"
                   description="Create your first order to start the Billantra workflow."
-                  action={
-                    <Button asChild size="sm">
-                      <Link to="/orders/new">Create order</Link>
-                    </Button>
-                  }
                 />
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] text-sm">
+                <table className="w-full min-w-[740px] text-xs">
                   <thead>
-                    <tr className="border-b border-[#071226]/10 bg-[#071226]/[0.035] text-left text-[10px] font-semibold uppercase tracking-[0.09em] text-[#071226]/42">
-                      <th className="px-5 py-3">Order</th>
-                      <th className="px-5 py-3">Customer</th>
-                      <th className="px-5 py-3 text-right">Value</th>
-                      <th className="px-5 py-3">Status</th>
-                      <th className="px-5 py-3">Created</th>
-                      <th className="px-5 py-3 text-right"> </th>
+                    <tr className="border-b border-[#071226]/10 bg-[#071226]/[0.025] text-left text-[9px] font-semibold uppercase tracking-[0.08em] text-[#071226]/42">
+                      <th className="px-3 py-2">Order</th>
+                      <th className="px-3 py-2">Customer</th>
+                      <th className="px-3 py-2 text-right">Amount</th>
+                      <th className="px-3 py-2 text-center">Status</th>
+                      <th className="px-3 py-2">Created</th>
+                      <th className="px-3 py-2 text-right"> </th>
                     </tr>
                   </thead>
-
-                  <tbody className="divide-y divide-[#071226]/10">
-                    {orders.slice(0, 7).map((order) => (
-                      <tr
-                        key={order.id}
-                        className="hover:bg-[#D5A125]/[0.055]"
-                      >
-                        <td className="px-5 py-4 font-medium text-[#071226]">
+                  <tbody className="divide-y divide-[#071226]/8">
+                    {orders.slice(0, 9).map((order) => (
+                      <tr key={order.id} className="hover:bg-[#D5A125]/5">
+                        <td className="px-3 py-2.5 font-medium text-[#071226]">
                           {order.orderNumber}
                         </td>
-                        <td className="px-5 py-4 text-[#071226]/56">
+                        <td className="px-3 py-2.5 text-[#071226]/58">
                           {order.customerEmail}
                         </td>
-                        <td className="px-5 py-4 text-right font-medium tabular-nums text-[#071226]">
+                        <td className="px-3 py-2.5 text-right font-medium tabular-nums text-[#071226]">
                           {formatCurrency(
                             orderTotals(order).total,
                             order.currency,
                           )}
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="px-3 py-2.5 text-center">
                           <StatusBadge status={order.status} />
                         </td>
-                        <td className="px-5 py-4 text-[#071226]/42">
+                        <td className="px-3 py-2.5 text-[#071226]/45">
                           {formatDate(order.createdAt)}
                         </td>
-                        <td className="px-5 py-4 text-right">
+                        <td className="px-3 py-2.5 text-right">
                           <Button asChild variant="ghost" size="sm">
                             <Link
                               to="/orders/$id"
@@ -276,51 +246,43 @@ function DashboardPage() {
             )}
           </section>
 
-          <aside className="space-y-5">
-            <div className="rounded-xl bg-[#071226] p-5 text-[#FAF7F4]">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D5A125]">
+          <aside className="space-y-3">
+            <section className="dark-surface rounded-md bg-[#071226] p-4 text-white">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-white">
                 Recorded order value
               </p>
-              <p className="mt-3 text-[28px] font-semibold tracking-[-0.04em] tabular-nums">
+              <p className="mt-2 text-[25px] font-semibold tracking-[-0.04em] text-white tabular-nums">
                 {formatCurrency(totalValue, primaryCurrency)}
               </p>
-              <p className="mt-1 text-xs text-[#FAF7F4]/48">
-                Across all orders in this workspace
-              </p>
-
-              <div className="mt-5 h-px bg-[#FAF7F4]/10" />
-
-              <div className="mt-4 flex items-center justify-between text-xs">
-                <span className="text-[#FAF7F4]/48">Total orders</span>
-                <span className="font-semibold">
-                  {orders?.length ?? 0}
-                </span>
+              <div className="mt-4 border-t border-white/18 pt-3">
+                <div className="flex items-center justify-between text-[11px] text-white">
+                  <span className="text-white">Total orders</span>
+                  <strong className="text-white">{orders?.length ?? 0}</strong>
+                </div>
               </div>
-            </div>
+            </section>
 
-            <div className="rounded-xl border border-[#071226]/10 bg-[#FAF7F4] p-5">
-              <h2 className="text-sm font-semibold text-[#071226]">
+            <section className="rounded-md border border-[#071226]/10 bg-[#FAF7F4] p-3">
+              <h2 className="text-[12px] font-semibold text-[#071226]">
                 Quick actions
               </h2>
-
-              <div className="mt-4 space-y-2">
+              <div className="mt-2 divide-y divide-[#071226]/10">
                 <Link
                   to="/orders/new"
-                  className="flex items-center justify-between rounded-lg border border-[#071226]/12 px-3 py-3 text-sm font-medium text-[#071226] hover:border-[#D5A125] hover:bg-[#D5A125]/10"
+                  className="flex items-center justify-between py-2.5 text-xs font-medium text-[#071226]"
                 >
-                  Create a new order
-                  <ArrowUpRight className="h-4 w-4" />
+                  Create an order
+                  <ArrowUpRight className="h-3.5 w-3.5" />
                 </Link>
-
                 <Link
                   to="/invoices"
-                  className="flex items-center justify-between rounded-lg border border-[#071226]/12 px-3 py-3 text-sm font-medium text-[#071226] hover:border-[#D5A125] hover:bg-[#D5A125]/10"
+                  className="flex items-center justify-between py-2.5 text-xs font-medium text-[#071226]"
                 >
                   Review invoices
-                  <ArrowUpRight className="h-4 w-4" />
+                  <ArrowUpRight className="h-3.5 w-3.5" />
                 </Link>
               </div>
-            </div>
+            </section>
           </aside>
         </div>
       </div>

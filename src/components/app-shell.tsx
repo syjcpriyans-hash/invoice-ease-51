@@ -32,7 +32,7 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
 
   return (
-    <nav aria-label="Main navigation" className="space-y-1">
+    <nav aria-label="Main navigation" className="space-y-0.5">
       {NAV_ITEMS.map((item) => {
         const active =
           item.to === "/orders"
@@ -48,23 +48,21 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             onClick={onNavigate}
             aria-current={active ? "page" : undefined}
             className={cn(
-              "group flex h-10 items-center gap-3 rounded-lg px-3 text-[14px] font-medium transition-colors",
+              "group relative flex h-9 items-center gap-2.5 rounded-md px-3 text-[13px] font-medium text-white transition-colors",
               active
-                ? "bg-[#FAF7F4]/10 text-[#FAF7F4]"
-                : "text-[#FAF7F4]/58 hover:bg-[#FAF7F4]/[0.06] hover:text-[#FAF7F4]",
+                ? "bg-white/10"
+                : "hover:bg-white/[0.06]",
             )}
           >
+            {active ? (
+              <span className="absolute inset-y-2 left-0 w-0.5 rounded-full bg-[#D5A125]" />
+            ) : null}
             <item.icon
-              className={cn(
-                "h-[17px] w-[17px]",
-                active
-                  ? "text-[#D5A125]"
-                  : "text-[#FAF7F4]/38 group-hover:text-[#FAF7F4]",
-              )}
+              className="h-4 w-4 text-white"
               strokeWidth={1.8}
               aria-hidden="true"
             />
-            {item.label}
+            <span className="text-white">{item.label}</span>
           </Link>
         );
       })}
@@ -72,36 +70,34 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function AccountBlock({
+function WorkspaceAccount({
   email,
   onSignOut,
 }: {
   email?: string;
   onSignOut: () => void;
 }) {
-  const initial = email?.charAt(0).toUpperCase() || "B";
-
   return (
-    <div className="border-t border-[#FAF7F4]/10 pt-4">
-      <div className="flex items-center gap-3 rounded-lg px-2 py-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#D5A125] text-xs font-semibold text-[#071226]">
-          {initial}
+    <div className="border-t border-white/14 pt-3">
+      <div className="flex items-center gap-2.5 px-2">
+        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[#D5A125] text-[11px] font-semibold text-[#071226]">
+          {email?.charAt(0).toUpperCase() || "B"}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-medium text-[#FAF7F4]">
+          <p className="truncate text-[11px] font-medium text-white">
             {email || "Billantra account"}
           </p>
-          <p className="mt-0.5 text-[10px] uppercase tracking-[0.08em] text-[#FAF7F4]/36">
+          <p className="text-[9px] font-medium uppercase tracking-[0.08em] text-white">
             Workspace owner
           </p>
         </div>
         <button
           type="button"
           onClick={onSignOut}
-          className="rounded-md p-1.5 text-[#FAF7F4]/42 hover:bg-[#FAF7F4]/10 hover:text-[#FAF7F4]"
+          className="rounded-md p-1.5 text-white hover:bg-white/10"
           aria-label="Sign out"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-3.5 w-3.5 text-white" />
         </button>
       </div>
     </div>
@@ -123,39 +119,33 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF7F4]">
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[252px] flex-col bg-[#071226] px-4 py-5 lg:flex">
+    <div className="billantra-app min-h-screen bg-[#FAF7F4]">
+      <aside className="dark-surface fixed inset-y-0 left-0 z-40 hidden w-[224px] flex-col bg-[#071226] px-3 py-4 lg:flex">
         <SiteLogo inverse className="px-2" />
-
-        <p className="mt-9 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-[#FAF7F4]/30">
+        <p className="mt-7 px-3 text-[9px] font-semibold uppercase tracking-[0.16em] text-white">
           Operations
         </p>
         <div className="mt-2 flex-1">
           <NavLinks />
         </div>
-
         <Link
           to="/settings"
-          className="mb-3 flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-[#FAF7F4]/58 hover:bg-[#FAF7F4]/[0.06] hover:text-[#FAF7F4]"
+          className="mb-3 flex h-9 items-center gap-2.5 rounded-md px-3 text-[13px] font-medium text-white hover:bg-white/[0.06]"
         >
-          <Settings
-            className="h-[17px] w-[17px] text-[#FAF7F4]/38"
-            strokeWidth={1.8}
-          />
-          Settings
+          <Settings className="h-4 w-4 text-white" strokeWidth={1.8} />
+          <span className="text-white">Settings</span>
         </Link>
-
-        <AccountBlock email={user?.email} onSignOut={handleSignOut} />
+        <WorkspaceAccount email={user?.email} onSignOut={handleSignOut} />
       </aside>
 
-      <div className="lg:pl-[252px]">
-        <header className="sticky top-0 z-30 flex h-16 items-center border-b border-[#071226]/10 bg-[#FAF7F4]/95 px-4 backdrop-blur sm:px-6 lg:px-8">
+      <div className="lg:pl-[224px]">
+        <header className="sticky top-0 z-30 flex h-14 items-center border-b border-[#071226]/10 bg-[#FAF7F4]/96 px-4 backdrop-blur sm:px-5 lg:px-6">
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="mr-3 lg:hidden"
+                className="mr-2 lg:hidden"
                 aria-label="Open navigation"
               >
                 <Menu className="h-5 w-5" />
@@ -163,39 +153,40 @@ export function AppShell({ children }: { children: ReactNode }) {
             </SheetTrigger>
             <SheetContent
               side="left"
-              className="w-[284px] border-0 bg-[#071226] px-4 py-5"
+              className="dark-surface w-[260px] border-0 bg-[#071226] px-3 py-4"
             >
               <SheetTitle className="sr-only">Navigation</SheetTitle>
               <SiteLogo inverse className="px-2" />
-              <div className="mt-9">
+              <div className="mt-7">
                 <NavLinks onNavigate={() => setOpen(false)} />
               </div>
-              <div className="mt-8">
-                <AccountBlock email={user?.email} onSignOut={handleSignOut} />
+              <div className="mt-7">
+                <WorkspaceAccount
+                  email={user?.email}
+                  onSignOut={handleSignOut}
+                />
               </div>
             </SheetContent>
           </Sheet>
 
-          <div className="flex min-w-0 items-center gap-3">
-            <p className="hidden text-sm font-medium text-[#071226]/55 sm:block">
-              Billantra operations
-            </p>
-          </div>
+          <p className="text-[12px] font-medium text-[#071226]/52">
+            Billantra operations
+          </p>
 
-          <div className="ml-auto flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2">
             <Button asChild size="sm" className="hidden sm:inline-flex">
               <Link to="/orders/new">
-                <FilePlus2 className="h-4 w-4" />
+                <FilePlus2 className="h-3.5 w-3.5" />
                 Create order
               </Link>
             </Button>
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#071226] text-xs font-semibold text-[#FAF7F4]">
+            <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[#071226] text-[10px] font-semibold text-white">
               {user?.email?.charAt(0).toUpperCase() || "B"}
             </span>
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-[1440px] px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
+        <main className="mx-auto w-full max-w-[1560px] px-4 py-5 sm:px-5 lg:px-6">
           {children}
         </main>
       </div>

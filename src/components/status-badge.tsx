@@ -3,16 +3,16 @@ import { EMAIL_STATUS_LABELS, ORDER_STATUS_LABELS } from "@/lib/format";
 import type { EmailStatus, OrderStatus } from "@/types";
 
 const base =
-  "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold whitespace-nowrap";
+  "inline-flex min-w-[82px] items-center justify-center rounded-full border px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap";
 
 const neutral =
-  "border-[#071226]/12 bg-[#071226]/[0.04] text-[#071226]/65";
+  "border-[#071226]/12 bg-[#071226]/4 text-[#071226]/64";
 const active =
-  "border-[#D5A125]/45 bg-[#D5A125]/12 text-[#071226]";
+  "border-[#D5A125]/52 bg-[#D5A125]/12 text-[#071226]";
 const complete =
   "border-[#D5A125] bg-[#D5A125] text-[#071226]";
 const failed =
-  "border-[#071226] bg-[#071226] text-[#FAF7F4]";
+  "border-[#071226] bg-[#071226] text-white";
 
 const orderStyles: Record<OrderStatus, string> = {
   draft: neutral,

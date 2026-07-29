@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Plus } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
@@ -10,7 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { orderService } from "@/services/orderService";
-import { customerUrl, formatCurrency, formatDate, orderTotals } from "@/lib/format";
+import {
+  customerUrl,
+  formatCurrency,
+  formatDate,
+  orderTotals,
+} from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Order, OrderStatus } from "@/types";
 import { RequireAuth } from "@/lib/auth";
@@ -19,12 +24,11 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/orders/")({
   head: () => ({
     meta: [
-      { title: "Orders — InvoiceFlow" },
-      { name: "description", content: "Search, filter and manage every order and its customer link." },
-      { property: "og:title", content: "Orders — InvoiceFlow" },
+      { title: "Orders | Billantra" },
       {
-        property: "og:description",
-        content: "Search, filter and manage every order and its customer link.",
+        name: "description",
+        content:
+          "Search, filter, and manage every order and customer link.",
       },
     ],
   }),
@@ -37,7 +41,7 @@ export const Route = createFileRoute("/orders/")({
 
 const FILTERS = [
   { key: "all", label: "All" },
-  { key: "awaiting", label: "Awaiting Customer" },
+  { key: "awaiting", label: "Awaiting customer" },
   { key: "submitted", label: "Submitted" },
   { key: "completed", label: "Completed" },
   { key: "failed", label: "Failed" },
@@ -46,9 +50,21 @@ const FILTERS = [
 type FilterKey = (typeof FILTERS)[number]["key"];
 
 const GROUPS: Record<Exclude<FilterKey, "all">, OrderStatus[]> = {
-  awaiting: ["draft", "link_created", "link_sent", "link_email_failed", "form_opened"],
+  awaiting: [
+    "draft",
+    "link_created",
+    "link_sent",
+    "link_email_failed",
+    "form_opened",
+  ],
   submitted: ["submitted"],
-  completed: ["invoice_generating", "invoice_generated", "email_queued", "email_sent", "delivered"],
+  completed: [
+    "invoice_generating",
+    "invoice_generated",
+    "email_queued",
+    "email_sent",
+    "delivered",
+  ],
   failed: ["link_email_failed", "failed"],
 };
 
@@ -59,15 +75,19 @@ function OrdersPage() {
 
   useEffect(() => {
     let active = true;
+
     orderService
       .list()
       .then((data) => {
         if (active) setOrders(data);
       })
       .catch((error) => {
-        toast.error(error instanceof Error ? error.message : "Could not load orders");
+        toast.error(
+          error instanceof Error ? error.message : "Could not load orders",
+        );
         if (active) setOrders([]);
       });
+
     return () => {
       active = false;
     };
@@ -75,112 +95,190 @@ function OrdersPage() {
 
   const visible = useMemo(() => {
     const list = orders ?? [];
-    const q = query.trim().toLowerCase();
+    const normalizedQuery = query.trim().toLowerCase();
+
     return list.filter((order) => {
       const matchesQuery =
-        !q ||
-        order.orderNumber.toLowerCase().includes(q) ||
-        order.customerEmail.toLowerCase().includes(q);
-      const matchesFilter = filter === "all" || GROUPS[filter].includes(order.status);
+        !normalizedQuery ||
+        order.orderNumber.toLowerCase().includes(normalizedQuery) ||
+        order.customerEmail.toLowerCase().includes(normalizedQuery);
+
+      const matchesFilter =
+        filter === "all" || GROUPS[filter].includes(order.status);
+
       return matchesQuery && matchesFilter;
     });
   }, [orders, query, filter]);
 
+  const totalValue = visible.reduce(
+    (sum, order) => sum + orderTotals(order).total,
+    0,
+  );
+  const currency = visible[0]?.currency ?? "USD";
+
   return (
     <AppShell>
-      <div className="space-y-6">
+      <div className="space-y-4">
         <PageHeader
           title="Orders"
-          description="Every order, its customer information link and current status."
+          description="Search, review, and manage every customer-link workflow."
           actions={
             <Button asChild size="sm">
-              <Link to="/orders/new">Create Order</Link>
+              <Link to="/orders/new">
+                <Plus className="h-3.5 w-3.5" />
+                Create order
+              </Link>
             </Button>
           }
         />
 
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div className="w-full max-w-sm space-y-1.5">
-            <Label htmlFor="order-search">Search orders</Label>
-            <Input
-              id="order-search"
-              value={query}
-              placeholder="Order number or customer email"
-              onChange={(e) => setQuery(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Filter orders by status">
-            {FILTERS.map((f) => (
-              <button
-                key={f.key}
-                type="button"
-                aria-pressed={filter === f.key}
-                onClick={() => setFilter(f.key)}
-                className={cn(
-                  "rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
-                  filter === f.key
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
+          <section className="overflow-hidden rounded-md border border-[#071226]/10 bg-[#FAF7F4]">
+            <div className="flex flex-col gap-3 border-b border-[#071226]/10 px-3 py-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="w-full max-w-sm">
+                <Label
+                  htmlFor="order-search"
+                  className="mb-1 block text-[10px] uppercase tracking-[0.06em]"
+                >
+                  Search orders
+                </Label>
+                <Input
+                  id="order-search"
+                  value={query}
+                  placeholder="Order number or customer email"
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+              </div>
+              <p className="text-[11px] text-[#071226]/45">
+                {visible.length} matching order
+                {visible.length === 1 ? "" : "s"}
+              </p>
+            </div>
 
-        {orders === null ? (
-          <LoadingState label="Loading orders…" />
-        ) : visible.length === 0 ? (
-          <EmptyState title="No matching orders" description="Adjust your search or filters." />
-        ) : (
-          <div className="overflow-x-auto rounded-lg border border-border bg-card">
-            <table className="w-full min-w-[860px] text-sm">
-              <caption className="sr-only">Orders</caption>
-              <thead className="bg-muted/60 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <tr>
-                  <th scope="col" className="px-4 py-3 font-medium">Order number</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Customer email</th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">Amount</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Status</th>
-                  <th scope="col" className="px-4 py-3 font-medium">Date</th>
-                  <th scope="col" className="px-4 py-3 text-right font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {visible.map((order) => (
-                  <tr key={order.id}>
-                    <td className="px-4 py-3 font-medium text-foreground">{order.orderNumber}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{order.customerEmail}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-foreground">
-                      {formatCurrency(orderTotals(order).total, order.currency)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <StatusBadge status={order.status} />
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">{formatDate(order.createdAt)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap items-center justify-end gap-2">
-                        <Button asChild variant="outline" size="sm">
-                          <Link to="/orders/$id" params={{ id: order.id }}>
-                            View
-                          </Link>
-                        </Button>
-                        <CopyLinkButton value={customerUrl(order.token)} label="Copy link" />
-                        <Button asChild variant="ghost" size="sm">
-                          <Link to="/customer/$token" params={{ token: order.token }} target="_blank">
-                            <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                            Open form
-                          </Link>
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
+            {orders === null ? (
+              <div className="p-4">
+                <LoadingState label="Loading orders…" />
+              </div>
+            ) : visible.length === 0 ? (
+              <div className="p-4">
+                <EmptyState
+                  title="No matching orders"
+                  description="Adjust your search or filter."
+                />
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[900px] text-xs">
+                  <thead>
+                    <tr className="border-b border-[#071226]/10 bg-[#071226]/[0.025] text-left text-[9px] font-semibold uppercase tracking-[0.08em] text-[#071226]/42">
+                      <th className="px-3 py-2">Order</th>
+                      <th className="px-3 py-2">Customer</th>
+                      <th className="px-3 py-2 text-right">Amount</th>
+                      <th className="px-3 py-2 text-center">Status</th>
+                      <th className="px-3 py-2">Created</th>
+                      <th className="px-3 py-2 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#071226]/8">
+                    {visible.map((order) => (
+                      <tr key={order.id} className="hover:bg-[#D5A125]/5">
+                        <td className="px-3 py-2.5 font-medium text-[#071226]">
+                          {order.orderNumber}
+                        </td>
+                        <td className="px-3 py-2.5 text-[#071226]/58">
+                          {order.customerEmail}
+                        </td>
+                        <td className="px-3 py-2.5 text-right font-medium tabular-nums text-[#071226]">
+                          {formatCurrency(
+                            orderTotals(order).total,
+                            order.currency,
+                          )}
+                        </td>
+                        <td className="px-3 py-2.5 text-center">
+                          <StatusBadge status={order.status} />
+                        </td>
+                        <td className="px-3 py-2.5 text-[#071226]/45">
+                          {formatDate(order.createdAt)}
+                        </td>
+                        <td className="px-3 py-2.5">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button asChild variant="outline" size="sm">
+                              <Link
+                                to="/orders/$id"
+                                params={{ id: order.id }}
+                              >
+                                View
+                              </Link>
+                            </Button>
+                            <CopyLinkButton
+                              value={customerUrl(order.token)}
+                              label="Copy link"
+                            />
+                            <Button asChild variant="ghost" size="icon">
+                              <Link
+                                to="/customer/$token"
+                                params={{ token: order.token }}
+                                target="_blank"
+                                aria-label="Open customer form"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </Link>
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+
+          <aside className="space-y-3">
+            <section className="rounded-md border border-[#071226]/10 bg-[#FAF7F4] p-3">
+              <h2 className="text-[12px] font-semibold text-[#071226]">
+                Filter by status
+              </h2>
+              <div className="mt-2 space-y-0.5">
+                {FILTERS.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    aria-pressed={filter === item.key}
+                    onClick={() => setFilter(item.key)}
+                    className={cn(
+                      "flex w-full items-center justify-between rounded-md border px-2.5 py-2 text-left text-xs font-medium",
+                      filter === item.key
+                        ? "border-[#D5A125] bg-[#D5A125]/12 text-[#071226]"
+                        : "border-transparent text-[#071226]/60 hover:bg-[#071226]/4 hover:text-[#071226]",
+                    )}
+                  >
+                    {item.label}
+                    <span className="text-[10px]">
+                      {item.key === "all"
+                        ? orders?.length ?? 0
+                        : orders?.filter((order) =>
+                            GROUPS[item.key].includes(order.status),
+                          ).length ?? 0}
+                    </span>
+                  </button>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              </div>
+            </section>
+
+            <section className="dark-surface rounded-md bg-[#071226] p-3 text-white">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-white">
+                Visible order value
+              </p>
+              <p className="mt-2 text-xl font-semibold text-white tabular-nums">
+                {formatCurrency(totalValue, currency)}
+              </p>
+              <p className="mt-1 text-[10px] text-white">
+                Based on the current search and filter.
+              </p>
+            </section>
+          </aside>
+        </div>
       </div>
     </AppShell>
   );

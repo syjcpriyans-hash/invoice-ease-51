@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { businessSettingsSchema, type BusinessSettingsValues } from "@/lib/schemas";
+import {
+  businessSettingsSchema,
+  type BusinessSettingsValues,
+} from "@/lib/schemas";
 import { settingsService } from "@/services/settingsService";
 import { formatInvoiceNumber } from "@/lib/format";
 import { toast } from "sonner";
@@ -18,12 +21,11 @@ import { DEFAULT_SETTINGS } from "@/services/seedData";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — InvoiceFlow" },
-      { name: "description", content: "Business details, invoice defaults, branding and email template." },
-      { property: "og:title", content: "Settings — InvoiceFlow" },
+      { title: "Settings | Billantra" },
       {
-        property: "og:description",
-        content: "Business details, invoice defaults, branding and email template.",
+        name: "description",
+        content:
+          "Business details, invoice defaults, branding, and email templates.",
       },
     ],
   }),
@@ -34,15 +36,6 @@ export const Route = createFileRoute("/settings")({
   ),
 });
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="space-y-4 rounded-lg border border-border bg-card p-5 shadow-xs">
-      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-      <div className="grid gap-4 sm:grid-cols-2">{children}</div>
-    </section>
-  );
-}
-
 function SettingsPage() {
   const form = useForm<BusinessSettingsValues>({
     resolver: zodResolver(businessSettingsSchema),
@@ -51,14 +44,20 @@ function SettingsPage() {
 
   useEffect(() => {
     let active = true;
+
     settingsService
       .get()
       .then((settings) => {
         if (active) form.reset(settings);
       })
       .catch((error) => {
-        toast.error(error instanceof Error ? error.message : "Could not load settings");
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Could not load settings",
+        );
       });
+
     return () => {
       active = false;
     };
@@ -71,25 +70,42 @@ function SettingsPage() {
   function field(
     name: keyof BusinessSettingsValues,
     label: string,
-    options?: { type?: string; area?: boolean; span?: boolean },
+    options?: {
+      type?: string;
+      area?: boolean;
+      span?: boolean;
+    },
   ) {
     const message = errors[name]?.message as string | undefined;
+
     return (
-      <div className={`space-y-1.5 ${options?.span ? "sm:col-span-2" : ""}`} key={name}>
+      <div
+        className={`space-y-1 ${
+          options?.span ? "sm:col-span-2" : ""
+        }`}
+        key={name}
+      >
         <Label htmlFor={name}>{label}</Label>
         {options?.area ? (
-          <Textarea id={name} rows={3} {...form.register(name)} />
+          <Textarea
+            id={name}
+            rows={3}
+            {...form.register(name)}
+          />
         ) : (
           <Input
             id={name}
             type={options?.type ?? "text"}
-            {...form.register(name, options?.type === "number" ? { valueAsNumber: true } : {})}
+            {...form.register(
+              name,
+              options?.type === "number"
+                ? { valueAsNumber: true }
+                : {},
+            )}
           />
         )}
         {message ? (
-          <p role="alert" className="text-sm text-destructive">
-            {message}
-          </p>
+          <p className="text-xs text-[#071226]">{message}</p>
         ) : null}
       </div>
     );
@@ -100,16 +116,30 @@ function SettingsPage() {
       await settingsService.save(data);
       toast.success("Settings saved");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not save settings");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not save settings",
+      );
     }
   }
 
+  const sectionClass =
+    "overflow-hidden rounded-md border border-[#071226]/10 bg-[#FAF7F4]";
+  const sectionHeader =
+    "border-b border-[#071226]/10 px-4 py-2.5 text-[12px] font-semibold text-[#071226]";
+  const sectionBody = "grid gap-3 p-4 sm:grid-cols-2";
+
   return (
     <AppShell>
-      <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)} noValidate>
+      <form
+        className="space-y-4"
+        onSubmit={form.handleSubmit(onSubmit)}
+        noValidate
+      >
         <PageHeader
           title="Settings"
-          description="These defaults are applied to new orders and generated invoices."
+          description="Business identity, invoice defaults, and customer-facing email content."
           actions={
             <Button type="submit" size="sm">
               Save settings
@@ -117,63 +147,146 @@ function SettingsPage() {
           }
         />
 
-        <Section title="Business information">
-          {field("legalBusinessName", "Legal business name")}
-          {field("displayName", "Display name")}
-          {field("businessEmail", "Business email", { type: "email" })}
-          {field("phone", "Phone number")}
-          {field("address", "Address", { area: true, span: true })}
-          {field("taxId", "Tax identification number")}
-        </Section>
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px]">
+          <div className="space-y-4">
+            <section className={sectionClass}>
+              <h2 className={sectionHeader}>
+                Business information
+              </h2>
+              <div className={sectionBody}>
+                {field(
+                  "legalBusinessName",
+                  "Legal business name",
+                )}
+                {field("displayName", "Display name")}
+                {field("businessEmail", "Business email", {
+                  type: "email",
+                })}
+                {field("phone", "Phone number")}
+                {field("address", "Address", {
+                  area: true,
+                  span: true,
+                })}
+                {field(
+                  "taxId",
+                  "Tax identification number",
+                )}
+              </div>
+            </section>
 
-        <Section title="Invoice settings">
-          {field("invoicePrefix", "Invoice prefix")}
-          {field("nextInvoiceNumber", "Next invoice number", { type: "number" })}
-          {field("defaultCurrency", "Default currency")}
-          {field("defaultTaxRate", "Default tax rate (%)", { type: "number" })}
-          {field("defaultPaymentTerms", "Default payment terms (days)", { type: "number" })}
-          {field("paymentInstructions", "Payment instructions", { area: true, span: true })}
-          {field("footerNotes", "Footer notes", { area: true, span: true })}
-        </Section>
+            <section className={sectionClass}>
+              <h2 className={sectionHeader}>
+                Invoice defaults
+              </h2>
+              <div className={sectionBody}>
+                {field("invoicePrefix", "Invoice prefix")}
+                {field(
+                  "nextInvoiceNumber",
+                  "Next invoice number",
+                  { type: "number" },
+                )}
+                {field(
+                  "defaultCurrency",
+                  "Default currency",
+                )}
+                {field(
+                  "defaultTaxRate",
+                  "Default tax rate (%)",
+                  { type: "number" },
+                )}
+                {field(
+                  "defaultPaymentTerms",
+                  "Payment terms (days)",
+                  { type: "number" },
+                )}
+                {field(
+                  "paymentInstructions",
+                  "Payment instructions",
+                  { area: true, span: true },
+                )}
+                {field("footerNotes", "Footer notes", {
+                  area: true,
+                  span: true,
+                })}
+              </div>
+            </section>
 
-        <Section title="Branding">
-          <div className="space-y-1.5">
-            <Label htmlFor="logo">Logo upload</Label>
-            <div
-              id="logo"
-              className="flex h-24 items-center justify-center rounded-md border border-dashed border-border text-sm text-muted-foreground"
-            >
-              Logo upload available once storage is connected
-            </div>
+            <section className={sectionClass}>
+              <h2 className={sectionHeader}>
+                Email template
+              </h2>
+              <div className={sectionBody}>
+                {field("emailSubject", "Email subject", {
+                  span: true,
+                })}
+                {field("emailGreeting", "Email greeting", {
+                  span: true,
+                })}
+                {field("emailBody", "Email body", {
+                  area: true,
+                  span: true,
+                })}
+                {field("emailClosing", "Email closing", {
+                  area: true,
+                  span: true,
+                })}
+              </div>
+            </section>
           </div>
-          {field("primaryColor", "Primary colour (hex)")}
-          <div className="rounded-md border border-border p-4 sm:col-span-2">
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">Invoice preview</p>
-            <div className="mt-3 space-y-1">
-              <p
-                className="text-base font-semibold"
-                style={{ color: values.primaryColor || "#1e3a5f" }}
-              >
+
+          <aside className="space-y-3 xl:sticky xl:top-[72px] xl:self-start">
+            <section className="dark-surface rounded-md bg-[#071226] p-4 text-white">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.12em] text-white">
+                Invoice preview
+              </p>
+              <p className="mt-3 text-sm font-semibold text-white">
                 {values.displayName || "Your business"}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="mt-1 text-xs text-white">
                 Invoice{" "}
-                {formatInvoiceNumber(values.invoicePrefix || "INV", values.nextInvoiceNumber || 1)} ·{" "}
-                {values.defaultCurrency || "USD"} · Net {values.defaultPaymentTerms ?? 30}
+                {formatInvoiceNumber(
+                  values.invoicePrefix || "INV",
+                  values.nextInvoiceNumber || 1,
+                )}
               </p>
-            </div>
-          </div>
-        </Section>
+              <dl className="mt-4 divide-y divide-white/18 text-xs">
+                <div className="flex justify-between py-2 text-white">
+                  <dt className="text-white">Currency</dt>
+                  <dd className="font-semibold text-white">
+                    {values.defaultCurrency || "USD"}
+                  </dd>
+                </div>
+                <div className="flex justify-between py-2 text-white">
+                  <dt className="text-white">Terms</dt>
+                  <dd className="font-semibold text-white">
+                    Net {values.defaultPaymentTerms ?? 30}
+                  </dd>
+                </div>
+              </dl>
+            </section>
 
-        <Section title="Email template">
-          {field("emailSubject", "Email subject", { span: true })}
-          {field("emailGreeting", "Email greeting", { span: true })}
-          {field("emailBody", "Email body", { area: true, span: true })}
-          {field("emailClosing", "Email closing", { area: true, span: true })}
-        </Section>
+            <section className="rounded-md border border-[#071226]/10 bg-[#FAF7F4] p-3">
+              <h2 className="text-[12px] font-semibold text-[#071226]">
+                Brand settings
+              </h2>
+              <div className="mt-3 space-y-1">
+                <Label htmlFor="primaryColor">
+                  Invoice accent colour
+                </Label>
+                <Input
+                  id="primaryColor"
+                  {...form.register("primaryColor")}
+                />
+              </div>
+              <div className="mt-3 rounded-md border border-dashed border-[#071226]/16 px-3 py-5 text-center text-[11px] text-[#071226]/45">
+                Logo upload becomes available after storage is connected.
+              </div>
+            </section>
 
-        <div className="flex justify-end">
-          <Button type="submit">Save settings</Button>
+            <Button type="submit" className="w-full">
+              Save settings
+            </Button>
+          </aside>
         </div>
       </form>
     </AppShell>

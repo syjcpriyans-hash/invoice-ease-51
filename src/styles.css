@@ -9,13 +9,13 @@
   --font-heading: "Poppins";
   --font-data: "Poppins";
 
-  --radius-sm: 5px;
-  --radius-md: 7px;
-  --radius-lg: 9px;
-  --radius-xl: 12px;
-  --radius-2xl: 16px;
-  --radius-3xl: 20px;
-  --radius-4xl: 24px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+  --radius-2xl: 8px;
+  --radius-3xl: 8px;
+  --radius-4xl: 8px;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -69,7 +69,7 @@
   --canvas: #faf7f4;
   --surface: #faf7f4;
   --ink: #071226;
-  --slate: rgba(7, 18, 38, 0.6);
+  --slate: rgba(7, 18, 38, 0.58);
   --primary-accent: #d5a125;
   --positive: #d5a125;
 
@@ -80,17 +80,17 @@
   --popover: #faf7f4;
   --popover-foreground: #071226;
   --primary: #071226;
-  --primary-foreground: #faf7f4;
-  --secondary: rgba(213, 161, 37, 0.12);
+  --primary-foreground: #ffffff;
+  --secondary: #d5a125;
   --secondary-foreground: #071226;
-  --muted: rgba(7, 18, 38, 0.05);
-  --muted-foreground: rgba(7, 18, 38, 0.6);
-  --accent: rgba(213, 161, 37, 0.14);
+  --muted: rgba(7, 18, 38, 0.045);
+  --muted-foreground: rgba(7, 18, 38, 0.58);
+  --accent: rgba(213, 161, 37, 0.1);
   --accent-foreground: #071226;
   --destructive: #071226;
-  --destructive-foreground: #faf7f4;
-  --border: rgba(7, 18, 38, 0.12);
-  --input: rgba(7, 18, 38, 0.2);
+  --destructive-foreground: #ffffff;
+  --border: rgba(7, 18, 38, 0.1);
+  --input: rgba(7, 18, 38, 0.18);
   --ring: #d5a125;
   --success: #d5a125;
   --success-foreground: #071226;
@@ -99,15 +99,15 @@
   --chart-1: #071226;
   --chart-2: #d5a125;
   --chart-3: rgba(7, 18, 38, 0.72);
-  --chart-4: rgba(213, 161, 37, 0.64);
-  --chart-5: rgba(7, 18, 38, 0.38);
+  --chart-4: rgba(213, 161, 37, 0.65);
+  --chart-5: rgba(7, 18, 38, 0.36);
   --sidebar: #071226;
-  --sidebar-foreground: #faf7f4;
+  --sidebar-foreground: #ffffff;
   --sidebar-primary: #d5a125;
   --sidebar-primary-foreground: #071226;
-  --sidebar-accent: rgba(250, 247, 244, 0.08);
-  --sidebar-accent-foreground: #faf7f4;
-  --sidebar-border: rgba(250, 247, 244, 0.1);
+  --sidebar-accent: rgba(255, 255, 255, 0.08);
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgba(255, 255, 255, 0.14);
   --sidebar-ring: #d5a125;
 }
 
@@ -122,7 +122,7 @@
 
   body {
     min-width: 320px;
-    background-color: #faf7f4;
+    background: #faf7f4;
     color: #071226;
     font-family: "Poppins";
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
@@ -135,10 +135,7 @@
   input,
   textarea,
   select,
-  option {
-    font-family: "Poppins";
-  }
-
+  option,
   h1,
   h2,
   h3,
@@ -158,27 +155,20 @@
     outline: none;
   }
 
-  input,
-  textarea,
-  select {
-    background-color: #faf7f4;
-    color: #071226;
-  }
-
   :focus-visible {
     outline: 2px solid #d5a125;
     outline-offset: 2px;
   }
 
   ::selection {
-    background: rgba(213, 161, 37, 0.3);
+    background: rgba(213, 161, 37, 0.28);
     color: #071226;
   }
 }
 
 @layer components {
   .marketing-container {
-    width: min(100% - 40px, 1240px);
+    width: min(100% - 36px, 1240px);
     margin-inline: auto;
   }
 
@@ -186,20 +176,56 @@
     font-variant-numeric: tabular-nums;
   }
 
+  .billantra-app [class*="shadow-"] {
+    box-shadow: none !important;
+  }
+
+  .billantra-app .rounded-xl,
+  .billantra-app .rounded-2xl,
+  .billantra-app .rounded-3xl,
+  .billantra-app .rounded-4xl {
+    border-radius: 8px !important;
+  }
+
+  .dark-surface,
+  .dark-surface p,
+  .dark-surface span,
+  .dark-surface label,
+  .dark-surface h1,
+  .dark-surface h2,
+  .dark-surface h3,
+  .dark-surface h4,
+  .dark-surface h5,
+  .dark-surface h6,
+  .dark-surface a,
+  .dark-surface dt,
+  .dark-surface dd,
+  .dark-surface svg {
+    color: #ffffff !important;
+  }
+
+  .dark-surface svg {
+    stroke: #ffffff !important;
+  }
+
+  table th {
+    font-weight: 600;
+  }
+
   table tbody tr {
-    transition: background-color 140ms ease;
+    transition: background-color 120ms ease;
   }
 }
 
 @media (min-width: 768px) {
   .marketing-container {
-    width: min(100% - 56px, 1240px);
+    width: min(100% - 48px, 1240px);
   }
 }
 
 @media (min-width: 1024px) {
   .marketing-container {
-    width: min(100% - 80px, 1240px);
+    width: min(100% - 64px, 1240px);
   }
 }
 
