@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dialog";
 import { createOrderSchema, orderItemSchema, type CreateOrderValues } from "@/lib/schemas";
 import { calculateTotals, customerUrl } from "@/lib/format";
+import { parseOrderEmail } from "@/lib/order-email-parser";
 import { orderService } from "@/services/orderService";
 import { settingsService } from "@/services/settingsService";
 import { APP_CONFIG, CURRENCIES } from "@/config/app";
@@ -63,6 +64,7 @@ function CreateOrderPage() {
   const [itemsError, setItemsError] = useState<string | undefined>();
   const [createdOrder, setCreatedOrder] = useState<Order | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [orderEmailText, setOrderEmailText] = useState("");
 
   const form = useForm<CreateOrderValues>({
     resolver: zodResolver(createOrderSchema),
@@ -113,6 +115,101 @@ function CreateOrderPage() {
       }),
     [items, watched.discountType, watched.discountValue, watched.taxRate, watched.shipping],
   );
+
+  function importOrderEmail() {
+    const parsed = parseOrderEmail(orderEmailText);
+    let imported = 0;
+
+    if (parsed.orderNumber) {
+      form.setValue("orderNumber", parsed.orderNumber, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      imported += 1;
+    }
+
+    if (parsed.customerEmail) {
+      form.setValue("customerEmail", parsed.customerEmail, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      imported += 1;
+    }
+
+    if (parsed.currency && CURRENCIES.includes(parsed.currency)) {
+      form.setValue("currency", parsed.currency, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      imported += 1;
+    }
+
+    if (parsed.dueInDays !== undefined && parsed.dueInDays >= 1 && parsed.dueInDays <= 365) {
+      form.setValue("dueInDays", parsed.dueInDays, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      imported += 1;
+    }
+
+    if (parsed.internalNotes) {
+      form.setValue("internalNotes", parsed.internalNotes, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      imported += 1;
+    }
+
+    if (parsed.discountType && parsed.discountValue !== undefined) {
+      form.setValue("discountType", parsed.discountType, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      form.setValue("discountValue", parsed.discountValue, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      imported += 1;
+    }
+
+    if (parsed.taxRate !== undefined && parsed.taxRate >= 0 && parsed.taxRate <= 100) {
+      form.setValue("taxRate", parsed.taxRate, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      imported += 1;
+    }
+
+    if (parsed.shipping !== undefined && parsed.shipping >= 0) {
+      form.setValue("shipping", parsed.shipping, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      imported += 1;
+    }
+
+    if (parsed.items.length > 0) {
+      setItems(
+        parsed.items.map((item) => ({
+          ...createEmptyItem(),
+          description: item.description,
+          sku: item.sku ?? "",
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          taxable: item.taxable,
+        })),
+      );
+      setItemsError(undefined);
+      imported += parsed.items.length;
+    }
+
+    if (imported === 0) {
+      toast.error("No order details were detected. Check the email format and try again.");
+      return;
+    }
+
+    toast.success("Order details imported. Review every field before creating the order.");
+  }
 
   function validateItems(values: CreateOrderValues): boolean {
     if (items.length === 0) {
@@ -196,13 +293,50 @@ function CreateOrderPage() {
       <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)} noValidate>
         <PageHeader
           title="Create order"
-          description="Line items, pricing and tax are locked once the customer link is generated."
+          description="Paste an order email or enter the details manually."
           actions={
             <Button type="submit" size="sm" disabled={submitting}>
               {submitting ? "Creating and emailing…" : "Create Order and Email Link"}
             </Button>
           }
         />
+
+        <section className="space-y-3 rounded-lg border border-border bg-card p-5 shadow-xs">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground">Import order email</h2>
+              <p className="text-sm text-muted-foreground">
+                Paste the customer order or confirmation email, then review the imported fields.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!orderEmailText.trim()}
+              onClick={importOrderEmail}
+            >
+              Auto-Fill Order
+            </Button>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="orderEmailText">Order email text</Label>
+            <Textarea
+              id="orderEmailText"
+              rows={8}
+              value={orderEmailText}
+              onChange={(event) => setOrderEmailText(event.target.value)}
+              placeholder={`Order Number: PO-1048
+Customer Email: customer@example.com
+Currency: CAD
+Net 30
+2 x Pharmacy Refrigerator @ 2499.00
+1 x Installation Service @ 350.00
+HST: 13%
+Shipping: 125.00`}
+            />
+          </div>
+        </section>
 
         <section className="grid gap-4 rounded-lg border border-border bg-card p-5 shadow-xs sm:grid-cols-2">
           <div className="space-y-1.5">
