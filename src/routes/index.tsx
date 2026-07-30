@@ -439,6 +439,17 @@ function LandingPage() {
                     {submitting ? "Submitting…" : "Request access"}
                   </Button>
                 </div>
+                <p className="text-[10px] leading-5 text-[#071226]/48">
+                  By requesting access, you acknowledge the{" "}
+                  <Link to="/privacy" className="font-medium underline underline-offset-2">
+                    Privacy Policy
+                  </Link>{" "}
+                  and{" "}
+                  <Link to="/terms" className="font-medium underline underline-offset-2">
+                    Terms of Service
+                  </Link>
+                  .
+                </p>
               </form>
             </div>
           </div>
@@ -451,8 +462,10 @@ function LandingPage() {
           <p className="text-xs text-[#071226]/48 sm:ml-5">
             Automated invoice operations for modern businesses.
           </p>
-          <div className="flex gap-5 text-xs text-[#071226]/60 sm:ml-auto">
+          <div className="flex flex-wrap gap-5 text-xs text-[#071226]/60 sm:ml-auto">
             <Link to="/login">Sign in</Link>
+            <Link to="/privacy">Privacy</Link>
+            <Link to="/terms">Terms</Link>
             <a href="#controls">Controls</a>
             <a href="#early-access">Early access</a>
           </div>

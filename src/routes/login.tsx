@@ -159,6 +159,18 @@ function LoginPage() {
             >
               {submitting ? "Signing in…" : "Sign in"}
             </Button>
+
+            <p className="text-center text-[10px] leading-5 text-[#071226]/48">
+              By signing in, you agree to the{" "}
+              <Link to="/terms" className="font-medium underline underline-offset-2">
+                Terms of Service
+              </Link>{" "}
+              and acknowledge the{" "}
+              <Link to="/privacy" className="font-medium underline underline-offset-2">
+                Privacy Policy
+              </Link>
+              .
+            </p>
           </form>
         </div>
       </section>

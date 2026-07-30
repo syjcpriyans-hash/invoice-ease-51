@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -520,7 +520,15 @@ function CustomerFormPage() {
               />
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex flex-col items-end gap-3">
+              <p className="max-w-2xl text-right text-[10px] leading-5 text-[#071226]/48">
+                By submitting this form, you confirm that you are authorized to
+                provide this information and acknowledge Billantra&apos;s{" "}
+                <Link to="/privacy" target="_blank" className="font-medium underline underline-offset-2">
+                  Privacy Policy
+                </Link>
+                . The seller may also have its own privacy practices.
+              </p>
               <Button
                 type="submit"
                 size="lg"
@@ -535,6 +543,18 @@ function CustomerFormPage() {
           </form>
         )}
       </main>
+
+      <footer className="border-t border-[#071226]/10">
+        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-5 px-4 py-5 text-[10px] text-[#071226]/48 sm:px-6">
+          <span>Powered by Billantra</span>
+          <Link to="/privacy" target="_blank" className="ml-auto hover:text-[#071226]">
+            Privacy
+          </Link>
+          <Link to="/terms" target="_blank" className="hover:text-[#071226]">
+            Terms
+          </Link>
+        </div>
+      </footer>
     </div>
   );
 }
