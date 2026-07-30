@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { installGlobalErrorMonitoring } from "@/lib/error-monitoring";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/auth";
 
@@ -24,7 +25,9 @@ function NotFoundComponent() {
           alt=""
           className="mx-auto h-14 w-14 object-contain"
         />
-        <h1 className="mt-7 text-6xl font-semibold text-[#071226]">404</h1>
+        <h1 className="mt-7 text-6xl font-semibold text-[#071226]">
+          404
+        </h1>
         <h2 className="mt-4 text-xl font-semibold text-[#071226]">
           Page not found
         </h2>
@@ -53,7 +56,9 @@ function ErrorComponent({
   const router = useRouter();
 
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    reportLovableError(error, {
+      boundary: "tanstack_root_error_component",
+    });
   }, [error]);
 
   return (
@@ -176,6 +181,10 @@ function RootComponent() {
       .replaceAll("InvoiceFlow", "Billantra")
       .replaceAll("Invoice Ease", "Billantra");
   }, [pathname]);
+
+  useEffect(() => {
+    return installGlobalErrorMonitoring();
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

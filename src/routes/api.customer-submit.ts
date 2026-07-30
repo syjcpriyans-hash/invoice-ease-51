@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
 import { processInvoiceForOrder } from "@/lib/server/invoice-automation";
+import { captureServerError } from "@/lib/server/error-monitoring";
 import {
   consumeRateLimit,
   getClientIp,
@@ -52,6 +53,8 @@ export const Route = createFileRoute(
   server: {
     handlers: {
       POST: async ({ request }) => {
+        let monitoringOwnerId: string | undefined;
+
         try {
           const payload = requestSchema.parse(
             await request.json(),
@@ -109,12 +112,13 @@ export const Route = createFileRoute(
             await admin
               .from("orders")
               .select(
-                "id, token_expires_at, customer_information(id)",
+                "id, owner_id, token_expires_at, customer_information(id)",
               )
               .eq("public_token", payload.token)
               .maybeSingle();
 
           if (orderError) throw orderError;
+          monitoringOwnerId = order?.owner_id;
 
           if (
             !order ||
@@ -170,6 +174,18 @@ export const Route = createFileRoute(
             const automation =
               await processInvoiceForOrder(order.id);
 
+            if (automation.emailStatus === "failed") {
+              await captureServerError({
+                ownerId: order.owner_id,
+                error:
+                  automation.error ||
+                  "Invoice automation returned a failed status.",
+                route: "/api/customer-submit",
+                operation: "invoice_automation",
+                statusCode: 500,
+              });
+            }
+
             return Response.json({
               success: true,
               orderId: order.id,
@@ -188,6 +204,14 @@ export const Route = createFileRoute(
               "Customer information was saved, but invoice automation failed",
               automationError,
             );
+
+            await captureServerError({
+              ownerId: order.owner_id,
+              error: automationError,
+              route: "/api/customer-submit",
+              operation: "invoice_automation_exception",
+              statusCode: 500,
+            });
 
             return Response.json({
               success: true,
@@ -211,6 +235,14 @@ export const Route = createFileRoute(
               { status: 400 },
             );
           }
+
+          await captureServerError({
+            ownerId: monitoringOwnerId,
+            error,
+            route: "/api/customer-submit",
+            operation: "customer_submission",
+            statusCode: 500,
+          });
 
           const message =
             error instanceof Error

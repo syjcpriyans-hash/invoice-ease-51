@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
+import { captureServerError } from "@/lib/server/error-monitoring";
 import {
   consumeRateLimit,
   getClientIp,
@@ -112,6 +113,13 @@ export const Route = createFileRoute("/api/waitlist")({
               { status: 400 },
             );
           }
+
+          await captureServerError({
+            error,
+            route: "/api/waitlist",
+            operation: "waitlist_submission",
+            statusCode: 500,
+          });
 
           return Response.json(
             {

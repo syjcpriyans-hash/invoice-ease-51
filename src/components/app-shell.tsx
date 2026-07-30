@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
+  Activity,
   FilePlus2,
   FileText,
   LayoutDashboard,
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { label: "Create order", to: "/orders/new", icon: FilePlus2 },
   { label: "Orders", to: "/orders", icon: Receipt },
   { label: "Invoices", to: "/invoices", icon: FileText },
+  { label: "System health", to: "/monitoring", icon: Activity },
 ] as const;
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {

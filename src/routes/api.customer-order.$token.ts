@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { getSupabaseAdmin } from "@/lib/server/supabase-admin";
+import { captureServerError } from "@/lib/server/error-monitoring";
 import {
   consumeRateLimit,
   getClientIp,
@@ -84,6 +85,13 @@ export const Route = createFileRoute(
             );
           }
 
+          await captureServerError({
+            error,
+            route: "/api/customer-order/:token",
+            operation: "load_customer_order",
+            statusCode: 500,
+          });
+
           return Response.json(
             { error: "Could not load this order." },
             { status: 500 },
@@ -137,6 +145,13 @@ export const Route = createFileRoute(
               { status: 404 },
             );
           }
+
+          await captureServerError({
+            error,
+            route: "/api/customer-order/:token",
+            operation: "mark_customer_form_opened",
+            statusCode: 500,
+          });
 
           return Response.json(
             { error: "Could not update this order." },
