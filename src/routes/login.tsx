@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SiteLogo } from "@/components/site-logo";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
@@ -24,6 +25,8 @@ function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   useEffect(() => {
     if (!loading && user) {
@@ -33,23 +36,30 @@ function LoginPage() {
 
   async function handleSignIn(event: React.FormEvent) {
     event.preventDefault();
+    if (!turnstileToken) {
+      toast.error("Complete the security verification.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      await signIn(email, password);
+      await signIn(email, password, turnstileToken);
       navigate({ to: "/dashboard", replace: true });
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Sign-in failed",
       );
     } finally {
+      setTurnstileToken("");
+      setTurnstileResetKey((value) => value + 1);
       setSubmitting(false);
     }
   }
 
   return (
     <div className="grid min-h-screen bg-[#FAF7F4] lg:grid-cols-[0.92fr_1.08fr]">
-      <section className="hidden flex-col justify-between bg-[#071226] p-12 text-[#FAF7F4] lg:flex">
+      <section className="dark-surface hidden flex-col justify-between bg-[#071226] p-12 text-white lg:flex">
         <SiteLogo inverse />
 
         <div className="max-w-xl">
@@ -137,7 +147,16 @@ function LoginPage() {
               />
             </div>
 
-            <Button className="h-11 w-full" disabled={submitting}>
+            <TurnstileWidget
+              action="login"
+              onToken={setTurnstileToken}
+              resetKey={turnstileResetKey}
+            />
+
+            <Button
+              className="h-11 w-full"
+              disabled={submitting || !turnstileToken}
+            >
               {submitting ? "Signing in…" : "Sign in"}
             </Button>
           </form>

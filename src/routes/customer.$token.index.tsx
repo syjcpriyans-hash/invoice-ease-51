@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SiteLogo } from "@/components/site-logo";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 import {
   customerInformationSchema,
   type CustomerFormValues,
@@ -53,7 +54,7 @@ export function CustomerHeader({
   sellerName: string;
 }) {
   return (
-    <header className="border-b border-[#FAF7F4]/10 bg-[#071226]">
+    <header className="dark-surface border-b border-white/10 bg-[#071226]">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
         <div>
           <p className="text-sm font-semibold text-[#FAF7F4]">
@@ -83,6 +84,8 @@ function CustomerFormPage() {
     undefined,
   );
   const [submitting, setSubmitting] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const sellerName = order?.sellerName ?? "Seller";
 
   const form = useForm<CustomerFormValues>({
@@ -184,6 +187,11 @@ function CustomerFormPage() {
           ...values.shippingAddress,
         } as Address);
 
+    if (!turnstileToken) {
+      toast.error("Complete the security verification.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -203,6 +211,7 @@ function CustomerFormPage() {
           confirmedAuthorized: true,
           submittedAt: new Date().toISOString(),
         },
+        turnstileToken,
       );
 
       window.sessionStorage.setItem(
@@ -218,6 +227,8 @@ function CustomerFormPage() {
         error instanceof Error ? error.message : "Submission failed",
       );
     } finally {
+      setTurnstileToken("");
+      setTurnstileResetKey((value) => value + 1);
       setSubmitting(false);
     }
   }
@@ -501,11 +512,19 @@ function CustomerFormPage() {
               ) : null}
             </fieldset>
 
+            <div className={panelClass}>
+              <TurnstileWidget
+                action="customer_submit"
+                onToken={setTurnstileToken}
+                resetKey={turnstileResetKey}
+              />
+            </div>
+
             <div className="flex justify-end">
               <Button
                 type="submit"
                 size="lg"
-                disabled={submitting}
+                disabled={submitting || !turnstileToken}
                 className="min-w-[280px]"
               >
                 {submitting

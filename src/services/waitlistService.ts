@@ -1,5 +1,3 @@
-import { supabase } from '@/lib/supabase';
-
 export type WaitlistSignupInput = {
   email: string;
   fullName?: string;
@@ -7,23 +5,43 @@ export type WaitlistSignupInput = {
   role?: string;
 };
 
+type WaitlistResult = {
+  status: "joined" | "already_joined";
+  error?: string;
+};
+
 export const waitlistService = {
-  async join(input: WaitlistSignupInput) {
-    const payload = {
-      email: input.email.trim().toLowerCase(),
-      full_name: input.fullName?.trim() || null,
-      company_name: input.companyName?.trim() || null,
-      role: input.role?.trim() || null,
-    };
+  async join(
+    input: WaitlistSignupInput,
+    turnstileToken: string,
+  ) {
+    const response = await fetch("/api/waitlist", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email: input.email.trim().toLowerCase(),
+        fullName: input.fullName?.trim() || "",
+        companyName: input.companyName?.trim() || "",
+        role: input.role?.trim() || "",
+        turnstileToken,
+      }),
+    });
 
-    const { error } = await supabase.from('waitlist_signups').insert(payload);
+    const payload =
+      (await response.json().catch(() => ({}))) as
+        WaitlistResult;
 
-    if (!error) return { status: 'joined' as const };
-
-    if ((error as { code?: string }).code === '23505') {
-      return { status: 'already_joined' as const };
+    if (!response.ok) {
+      throw new Error(
+        payload.error ||
+          "Could not submit the early-access request.",
+      );
     }
 
-    throw error;
+    return {
+      status: payload.status,
+    };
   },
 };

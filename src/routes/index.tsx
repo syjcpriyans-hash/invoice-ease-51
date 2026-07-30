@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { SiteLogo } from "@/components/site-logo";
+import { TurnstileWidget } from "@/components/turnstile-widget";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { waitlistService } from "@/services/waitlistService";
@@ -50,6 +51,8 @@ export const Route = createFileRoute("/")({
 function LandingPage() {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   async function submitEarlyAccess(event: React.FormEvent) {
     event.preventDefault();
@@ -59,15 +62,23 @@ function LandingPage() {
       return;
     }
 
+    if (!turnstileToken) {
+      toast.error("Complete the security verification.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      const result = await waitlistService.join({
-        email,
-        fullName: "",
-        companyName: "",
-        role: "",
-      });
+      const result = await waitlistService.join(
+        {
+          email,
+          fullName: "",
+          companyName: "",
+          role: "",
+        },
+        turnstileToken,
+      );
 
       toast.success(
         result.status === "already_joined"
@@ -82,6 +93,8 @@ function LandingPage() {
           : "Could not submit your request.",
       );
     } finally {
+      setTurnstileToken("");
+      setTurnstileResetKey((value) => value + 1);
       setSubmitting(false);
     }
   }
@@ -402,23 +415,30 @@ function LandingPage() {
               </div>
               <form
                 onSubmit={submitEarlyAccess}
-                className="flex flex-col gap-2 sm:flex-row"
+                className="space-y-2"
               >
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(event) =>
-                    setEmail(event.target.value)
-                  }
-                  placeholder="Work email address"
+                <TurnstileWidget
+                  action="waitlist"
+                  onToken={setTurnstileToken}
+                  resetKey={turnstileResetKey}
                 />
-                <Button
-                  type="submit"
-                  disabled={submitting}
-                  className="shrink-0"
-                >
-                  {submitting ? "Submitting…" : "Request access"}
-                </Button>
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    type="email"
+                    value={email}
+                    onChange={(event) =>
+                      setEmail(event.target.value)
+                    }
+                    placeholder="Work email address"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={submitting || !turnstileToken}
+                    className="shrink-0"
+                  >
+                    {submitting ? "Submitting…" : "Request access"}
+                  </Button>
+                </div>
               </form>
             </div>
           </div>
